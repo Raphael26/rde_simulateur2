@@ -1,244 +1,346 @@
 """
-Page de connexion - Login avec email et mot de passe.
+Page de Connexion - Login
+Design moderne et élégant avec Reflex
 """
 
 import reflex as rx
-from ..styles import COLORS, SHADOWS, RADIUS
 from ..state.auth_state import AuthState
+from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
 
 
-def login_page() -> rx.Component:
-    """Page de connexion."""
-    return rx.center(
+def login_card() -> rx.Component:
+    """Carte de connexion principale."""
+    return rx.box(
         rx.vstack(
             # Logo et titre
             rx.vstack(
                 rx.hstack(
+                    rx.icon("zap", size=32, color=Colors.PRIMARY),
                     rx.text(
-                        "RDE",
-                        font_weight="bold",
+                        "SimuPrime",
                         font_size="1.75rem",
-                        color=COLORS["primary"],
-                    ),
-                    rx.text(
-                        "Simulateur",
-                        font_weight="600",
-                        font_size="1.25rem",
-                        color=COLORS["text_primary"],
+                        font_weight="700",
+                        color=Colors.PRIMARY,
                     ),
                     spacing="2",
+                    align="center",
                 ),
                 rx.text(
                     "Connexion à votre compte",
-                    font_size="0.875rem",
-                    color=COLORS["text_muted"],
+                    font_size=Typography.SIZE_LG,
+                    color=Colors.GRAY_600,
+                    font_weight="500",
                 ),
                 spacing="2",
-                align_items="center",
+                align="center",
                 margin_bottom="2rem",
             ),
             
-            # Carte de connexion
-            rx.box(
-                rx.vstack(
-                    rx.heading(
-                        "Bienvenue",
-                        size="6",
-                        font_weight="700",
-                        color=COLORS["text_primary"],
-                    ),
-                    rx.text(
-                        "Connectez-vous pour accéder à vos simulations",
-                        font_size="0.875rem",
-                        color=COLORS["text_muted"],
-                        margin_bottom="1rem",
-                    ),
-                    
-                    # Message d'erreur
-                    rx.cond(
-                        AuthState.error_message != "",
-                        rx.callout(
+            # Message d'erreur
+            rx.cond(
+                AuthState.error_message != "",
+                rx.box(
+                    rx.hstack(
+                        rx.icon("alert-circle", size=18, color="#dc2626"),
+                        rx.text(
                             AuthState.error_message,
-                            icon="alert-circle",
-                            color_scheme="red",
-                            width="100%",
-                            margin_bottom="1rem",
+                            font_size=Typography.SIZE_SM,
+                            color="#dc2626",
                         ),
-                        rx.box(),
+                        spacing="2",
+                        align="center",
                     ),
-                    
-                    # Message de succès
-                    rx.cond(
-                        AuthState.success_message != "",
-                        rx.callout(
+                    padding="0.75rem 1rem",
+                    background="#fef2f2",
+                    border=f"1px solid #fecaca",
+                    border_radius=Borders.RADIUS_MD,
+                    width="100%",
+                    margin_bottom="1rem",
+                ),
+                rx.box(),
+            ),
+            
+            # Message de succès
+            rx.cond(
+                AuthState.success_message != "",
+                rx.box(
+                    rx.hstack(
+                        rx.icon("check-circle", size=18, color=Colors.SUCCESS),
+                        rx.text(
                             AuthState.success_message,
-                            icon="check-circle",
-                            color_scheme="green",
-                            width="100%",
-                            margin_bottom="1rem",
+                            font_size=Typography.SIZE_SM,
+                            color=Colors.SUCCESS,
                         ),
-                        rx.box(),
+                        spacing="2",
+                        align="center",
                     ),
-                    
-                    # Formulaire
-                    rx.form(
-                        rx.vstack(
-                            # Email
-                            rx.vstack(
-                                rx.text(
-                                    "Email",
-                                    font_weight="500",
-                                    font_size="0.875rem",
-                                    color=COLORS["text_primary"],
-                                ),
+                    padding="0.75rem 1rem",
+                    background=Colors.SUCCESS_LIGHT,
+                    border=f"1px solid {Colors.SUCCESS}30",
+                    border_radius=Borders.RADIUS_MD,
+                    width="100%",
+                    margin_bottom="1rem",
+                ),
+                rx.box(),
+            ),
+            
+            # Formulaire
+            rx.form(
+                rx.vstack(
+                    # Email
+                    rx.vstack(
+                        rx.text(
+                            "Adresse email",
+                            font_size=Typography.SIZE_SM,
+                            font_weight="500",
+                            color=Colors.GRAY_700,
+                        ),
+                        rx.box(
+                            rx.hstack(
+                                rx.icon("mail", size=18, color=Colors.GRAY_400),
                                 rx.input(
-                                    placeholder="votre@email.com",
+                                    placeholder="vous@exemple.com",
                                     type="email",
                                     value=AuthState.login_email,
                                     on_change=AuthState.set_login_email,
                                     width="100%",
-                                    size="3",
+                                    border="none",
+                                    outline="none",
+                                    background="transparent",
+                                    font_size=Typography.SIZE_BASE,
+                                    _focus={"outline": "none"},
                                 ),
-                                spacing="2",
+                                spacing="3",
                                 width="100%",
-                                align_items="stretch",
+                                padding="0.75rem 1rem",
                             ),
-                            
-                            # Mot de passe
-                            rx.vstack(
-                                rx.hstack(
-                                    rx.text(
-                                        "Mot de passe",
-                                        font_weight="500",
-                                        font_size="0.875rem",
-                                        color=COLORS["text_primary"],
-                                    ),
-                                    rx.spacer(),
-                                    rx.link(
-                                        "Mot de passe oublié ?",
-                                        href="/forgot-password",
-                                        font_size="0.75rem",
-                                        color=COLORS["primary"],
-                                    ),
-                                    width="100%",
-                                ),
+                            border=f"2px solid {Colors.GRAY_200}",
+                            border_radius=Borders.RADIUS_LG,
+                            background=Colors.WHITE,
+                            _focus_within={
+                                "border_color": Colors.PRIMARY,
+                                "box_shadow": f"0 0 0 3px {Colors.PRIMARY}20",
+                            },
+                            transition="all 0.2s ease",
+                            width="100%",
+                        ),
+                        spacing="1",
+                        width="100%",
+                    ),
+                    
+                    # Mot de passe
+                    rx.vstack(
+                        rx.hstack(
+                            rx.text(
+                                "Mot de passe",
+                                font_size=Typography.SIZE_SM,
+                                font_weight="500",
+                                color=Colors.GRAY_700,
+                            ),
+                            rx.spacer(),
+                            rx.link(
+                                "Mot de passe oublié ?",
+                                href="/forgot-password",
+                                font_size=Typography.SIZE_SM,
+                                color=Colors.PRIMARY,
+                                _hover={"text_decoration": "underline"},
+                            ),
+                            width="100%",
+                        ),
+                        rx.box(
+                            rx.hstack(
+                                rx.icon("lock", size=18, color=Colors.GRAY_400),
                                 rx.input(
                                     placeholder="••••••••",
-                                    type="password",
+                                    type=rx.cond(AuthState.show_login_password, "text", "password"),
                                     value=AuthState.login_password,
                                     on_change=AuthState.set_login_password,
                                     width="100%",
-                                    size="3",
+                                    border="none",
+                                    outline="none",
+                                    background="transparent",
+                                    font_size=Typography.SIZE_BASE,
+                                    _focus={"outline": "none"},
                                 ),
-                                spacing="2",
-                                width="100%",
-                                align_items="stretch",
-                            ),
-                            
-                            # Se souvenir de moi
-                            rx.hstack(
-                                rx.checkbox(
-                                    "Se souvenir de moi",
-                                    checked=AuthState.login_remember,
-                                    on_change=AuthState.set_login_remember,
-                                    size="2",
-                                ),
-                                width="100%",
-                            ),
-                            
-                            # Bouton de connexion
-                            rx.button(
-                                rx.cond(
-                                    AuthState.is_loading,
-                                    rx.hstack(
-                                        rx.spinner(size="2"),
-                                        rx.text("Connexion..."),
-                                        spacing="2",
+                                rx.icon_button(
+                                    rx.cond(
+                                        AuthState.show_login_password,
+                                        rx.icon("eye-off", size=18),
+                                        rx.icon("eye", size=18),
                                     ),
-                                    rx.text("Se connecter"),
+                                    variant="ghost",
+                                    size="1",
+                                    cursor="pointer",
+                                    on_click=AuthState.toggle_login_password,
+                                    color=Colors.GRAY_400,
                                 ),
-                                type="submit",
+                                spacing="3",
                                 width="100%",
-                                size="3",
-                                disabled=~AuthState.is_login_valid | AuthState.is_loading,
-                                style={
-                                    "background": COLORS["primary"],
-                                    "color": COLORS["white"],
-                                    "margin_top": "0.5rem",
-                                    "_hover": {
-                                        "background": COLORS["primary_dark"],
-                                    },
-                                    "_disabled": {
-                                        "opacity": "0.6",
-                                        "cursor": "not-allowed",
-                                    },
-                                },
+                                padding="0.75rem 1rem",
                             ),
-                            
-                            spacing="4",
+                            border=f"2px solid {Colors.GRAY_200}",
+                            border_radius=Borders.RADIUS_LG,
+                            background=Colors.WHITE,
+                            _focus_within={
+                                "border_color": Colors.PRIMARY,
+                                "box_shadow": f"0 0 0 3px {Colors.PRIMARY}20",
+                            },
+                            transition="all 0.2s ease",
                             width="100%",
                         ),
-                        on_submit=AuthState.handle_login,
+                        spacing="1",
                         width="100%",
                     ),
                     
-                    # Divider
-                    rx.hstack(
-                        rx.divider(width="40%"),
-                        rx.text("ou", font_size="0.75rem", color=COLORS["text_muted"]),
-                        rx.divider(width="40%"),
-                        width="100%",
-                        align_items="center",
-                        margin_y="1.5rem",
-                    ),
-                    
-                    # Lien inscription
-                    rx.text(
-                        rx.fragment(
-                            "Pas encore de compte ? ",
-                            rx.link(
-                                "Créer un compte",
-                                href="/register",
-                                color=COLORS["primary"],
-                                font_weight="600",
+                    # Bouton de connexion
+                    rx.button(
+                        rx.cond(
+                            AuthState.is_loading,
+                            rx.hstack(
+                                rx.spinner(size="1"),
+                                rx.text("Connexion en cours..."),
+                                spacing="2",
+                            ),
+                            rx.hstack(
+                                rx.text("Se connecter"),
+                                rx.icon("arrow-right", size=18),
+                                spacing="2",
                             ),
                         ),
-                        font_size="0.875rem",
-                        color=COLORS["text_secondary"],
-                        text_align="center",
+                        type="submit",
+                        disabled=AuthState.is_loading,
+                        width="100%",
+                        size="3",
+                        style={
+                            "background": f"linear-gradient(135deg, {Colors.PRIMARY} 0%, #2d6b62 100%)",
+                            "color": Colors.WHITE,
+                            "font_weight": "600",
+                            "padding": "0.875rem 1.5rem",
+                            "border_radius": Borders.RADIUS_LG,
+                            "cursor": "pointer",
+                            "_hover": {
+                                "transform": "translateY(-1px)",
+                                "box_shadow": Shadows.LG,
+                            },
+                            "_disabled": {
+                                "opacity": "0.7",
+                                "cursor": "not-allowed",
+                            },
+                            "transition": "all 0.2s ease",
+                        },
+                        margin_top="0.5rem",
                     ),
                     
-                    spacing="1",
+                    spacing="4",
                     width="100%",
-                    align_items="stretch",
                 ),
-                background=COLORS["white"],
-                border=f"1px solid {COLORS['border']}",
-                border_radius=RADIUS["xl"],
-                box_shadow=SHADOWS["lg"],
-                padding="2rem",
+                on_submit=AuthState.handle_login,
                 width="100%",
-                max_width="420px",
             ),
             
-            # Lien retour
-            rx.link(
-                rx.hstack(
-                    rx.icon(tag="arrow-left", size=16),
-                    rx.text("Retour à l'accueil"),
-                    spacing="2",
-                    color=COLORS["text_muted"],
-                    _hover={"color": COLORS["primary"]},
+            # Séparateur
+            rx.hstack(
+                rx.divider(width="100%"),
+                rx.text(
+                    "ou",
+                    font_size=Typography.SIZE_SM,
+                    color=Colors.GRAY_400,
+                    white_space="nowrap",
+                    padding_x="1rem",
                 ),
-                href="/",
-                margin_top="1.5rem",
+                rx.divider(width="100%"),
+                width="100%",
+                align="center",
+                margin_y="1.5rem",
+            ),
+            
+            # Lien vers inscription
+            rx.hstack(
+                rx.text(
+                    "Pas encore de compte ?",
+                    font_size=Typography.SIZE_SM,
+                    color=Colors.GRAY_500,
+                ),
+                rx.link(
+                    rx.hstack(
+                        rx.text("Créer un compte"),
+                        rx.icon("user-plus", size=16),
+                        spacing="1",
+                    ),
+                    href="/register",
+                    font_size=Typography.SIZE_SM,
+                    font_weight="600",
+                    color=Colors.PRIMARY,
+                    _hover={"text_decoration": "underline"},
+                ),
+                spacing="2",
+                justify="center",
+                width="100%",
             ),
             
             spacing="0",
-            align_items="center",
+            width="100%",
         ),
+        
+        # Style de la carte
+        background=Colors.WHITE,
+        padding="2.5rem",
+        border_radius=Borders.RADIUS_2XL,
+        box_shadow="0 25px 50px -12px rgba(0, 0, 0, 0.15)",
+        border=f"1px solid {Colors.GRAY_100}",
         width="100%",
-        min_height="100vh",
-        background=COLORS["background"],
-        padding="2rem",
+        max_width="420px",
     )
+
+
+def login_page_content() -> rx.Component:
+    """Contenu de la page de connexion."""
+    return rx.box(
+        rx.vstack(
+            login_card(),
+            
+            # Retour à l'accueil
+            rx.link(
+                rx.hstack(
+                    rx.icon("arrow-left", size=16),
+                    rx.text("Retour à l'accueil"),
+                    spacing="2",
+                    color=Colors.GRAY_500,
+                    _hover={"color": Colors.PRIMARY},
+                ),
+                href="/",
+                margin_top="2rem",
+            ),
+            
+            spacing="0",
+            align="center",
+            justify="center",
+            min_height="100vh",
+            padding="2rem",
+        ),
+        
+        # Background avec motif subtil
+        background=f"linear-gradient(135deg, {Colors.GRAY_50} 0%, #e0e7e6 100%)",
+        min_height="100vh",
+        position="relative",
+        _before={
+            "content": '""',
+            "position": "absolute",
+            "top": "0",
+            "left": "0",
+            "right": "0",
+            "bottom": "0",
+            "background": f"radial-gradient(circle at 20% 80%, {Colors.PRIMARY}10 0%, transparent 50%), radial-gradient(circle at 80% 20%, {Colors.PRIMARY}08 0%, transparent 50%)",
+            "pointer_events": "none",
+        },
+    )
+
+
+@rx.page(
+    route="/login",
+    title="Connexion - SimuPrime",
+    on_load=AuthState.redirect_if_authenticated,
+)
+def login_page() -> rx.Component:
+    """Page de connexion."""
+    return login_page_content()

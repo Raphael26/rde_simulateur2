@@ -1,9 +1,10 @@
 """
 Composant Sidebar - Navigation latérale de l'application.
+Avec affichage dynamique des informations utilisateur via AuthState.
 """
 
 import reflex as rx
-from ..state.user_state import UserState
+from ..state.auth_state import AuthState
 from ..styles import COLORS, SHADOWS, SPACING, RADIUS
 
 
@@ -63,158 +64,128 @@ def sidebar_section(title: str, children: list) -> rx.Component:
     )
 
 
-#def user_menu() -> rx.Component:
-#    """Menu utilisateur en bas de la sidebar."""
-#    return rx.hstack(
-#        rx.box(
-#            rx.text(
-#                UserState.initials,
-#                font_weight="600",
-#                color=COLORS["white"],
-#                font_size="0.875rem",
-#            ),
-#            background=COLORS["primary"],
-#            border_radius=RADIUS["full"],
-#            width="40px",
-#            height="40px",
-#            display="flex",
-#            align_items="center",
-#            justify_content="center",
-#        ),
-#        rx.vstack(
-#            rx.text(
-#                UserState.display_name,
-#                font_weight="600",
-#                font_size="0.875rem",
-#                color=COLORS["text_primary"],
-#                no_of_lines=1,
-#            ),
-#            rx.text(
-#                UserState.user_email,
-#                font_size="0.75rem",
-#                color=COLORS["text_muted"],
-#                no_of_lines=1,
-#            ),
-#            spacing="0",
-#            align_items="start",
-#        ),
-#        rx.spacer(),
-#        rx.menu.root(
-#            rx.menu.trigger(
-#                rx.icon_button(
-#                    rx.icon(tag="more-vertical", size=18),
-#                    variant="ghost",
-#                    size="1",
-#                    cursor="pointer",
-#                ),
-#            ),
-#            rx.menu.content(
-#                rx.menu.item(
-#                    rx.hstack(
-#                        rx.icon(tag="user", size=16),
-#                        rx.text("Mon profil"),
-#                        spacing="2",
-#                    ),
-#                    on_click=rx.redirect("/profile"),
-#                ),
-#                rx.menu.item(
-#                    rx.hstack(
-#                        rx.icon(tag="settings", size=16),
-#                        rx.text("Paramètres"),
-#                        spacing="2",
-#                    ),
-#                ),
-#                rx.menu.separator(),
-#                rx.menu.item(
-#                    rx.hstack(
-#                        rx.icon(tag="log-out", size=16, color=COLORS["error"]),
-#                        rx.text("Déconnexion", color=COLORS["error"]),
-#                        spacing="2",
-#                    ),
-#                    on_click=UserState.handle_logout,
-#                ),
-#            ),
-#        ),
-#        padding="1rem",
-#        background=COLORS["background"],
-#        border_radius=RADIUS["lg"],
-#        width="100%",
-#        spacing="3",
-#    )
-
-
 def user_menu() -> rx.Component:
-    """Menu utilisateur en bas de la sidebar."""
-    return rx.hstack(
-        rx.box(
-            rx.icon("user", size=18, color=COLORS["white"]),
-            background=COLORS["primary"],
-            border_radius=RADIUS["full"],
-            width="40px",
-            height="40px",
-            display="flex",
-            align_items="center",
-            justify_content="center",
-        ),
-        rx.vstack(
-            rx.text(
-                "Utilisateur",
-                font_weight="600",
-                font_size="0.875rem",
-                color=COLORS["text_primary"],
-                no_of_lines=1,
-            ),
-            rx.text(
-                "user@email.com",
-                font_size="0.75rem",
-                color=COLORS["text_muted"],
-                no_of_lines=1,
-            ),
-            spacing="0",
-            align_items="start",
-        ),
-        rx.spacer(),
-        rx.menu.root(
-            rx.menu.trigger(
-                rx.icon_button(
-                    rx.icon(tag="more-vertical", size=18),
-                    variant="ghost",
-                    size="1",
-                    cursor="pointer",
-                ),
-            ),
-            rx.menu.content(
-                rx.menu.item(
-                    rx.hstack(
-                        rx.icon(tag="user", size=16),
-                        rx.text("Mon profil"),
-                        spacing="2",
+    """Menu utilisateur en bas de la sidebar avec infos dynamiques."""
+    return rx.menu.root(
+        rx.menu.trigger(
+            rx.hstack(
+                # Avatar avec initiales - cercle parfait
+                rx.box(
+                    rx.text(
+                        AuthState.initials,
+                        font_weight="600",
+                        color=COLORS["white"],
+                        font_size="0.875rem",
                     ),
-                    on_click=rx.redirect("/profile"),
+                    background=COLORS["primary"],
+                    border_radius="50%",
+                    width="40px",
+                    height="40px",
+                    min_width="40px",
+                    min_height="40px",
+                    display="flex",
+                    align_items="center",
+                    justify_content="center",
                 ),
-                rx.menu.item(
-                    rx.hstack(
-                        rx.icon(tag="settings", size=16),
-                        rx.text("Paramètres"),
-                        spacing="2",
+                # Infos utilisateur
+                rx.vstack(
+                    rx.text(
+                        AuthState.display_name,
+                        font_weight="600",
+                        font_size="0.875rem",
+                        color=COLORS["text_primary"],
+                        no_of_lines=1,
+                        max_width="140px",
+                        overflow="hidden",
+                        text_overflow="ellipsis",
                     ),
-                ),
-                rx.menu.separator(),
-                rx.menu.item(
-                    rx.hstack(
-                        rx.icon(tag="log-out", size=16, color=COLORS["error"]),
-                        rx.text("Déconnexion", color=COLORS["error"]),
-                        spacing="2",
+                    rx.text(
+                        AuthState.user_email,
+                        font_size="0.75rem",
+                        color=COLORS["text_muted"],
+                        no_of_lines=1,
+                        max_width="140px",
+                        overflow="hidden",
+                        text_overflow="ellipsis",
                     ),
-                    on_click=rx.redirect("/login"),
+                    spacing="0",
+                    align_items="start",
                 ),
+                spacing="3",
+                padding="1rem",
+                background=COLORS["background"],
+                border_radius=RADIUS["lg"],
+                width="100%",
+                cursor="pointer",
+                _hover={"background": f"{COLORS['primary']}10"},
+                transition="all 0.2s ease",
             ),
         ),
-        padding="1rem",
-        background=COLORS["background"],
-        border_radius=RADIUS["lg"],
+        rx.menu.content(
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="user", size=16),
+                    rx.text("Mon profil"),
+                    spacing="2",
+                ),
+                on_click=rx.redirect("/profile"),
+            ),
+            rx.menu.separator(),
+            rx.menu.item(
+                rx.hstack(
+                    rx.icon(tag="log-out", size=16, color=COLORS["error"]),
+                    rx.text("Déconnexion", color=COLORS["error"]),
+                    spacing="2",
+                ),
+                on_click=AuthState.handle_logout,
+            ),
+        ),
+    )
+
+
+def user_menu_logged_out() -> rx.Component:
+    """Menu pour les utilisateurs non connectés."""
+    return rx.link(
+        rx.hstack(
+            rx.box(
+                rx.icon("user", size=18, color=COLORS["white"]),
+                background=COLORS["text_muted"],
+                border_radius="50%",
+                width="40px",
+                height="40px",
+                min_width="40px",
+                min_height="40px",
+                display="flex",
+                align_items="center",
+                justify_content="center",
+            ),
+            rx.vstack(
+                rx.text(
+                    "Non connecté",
+                    font_weight="500",
+                    font_size="0.875rem",
+                    color=COLORS["text_secondary"],
+                ),
+                rx.text(
+                    "Cliquez pour vous connecter",
+                    font_size="0.75rem",
+                    color=COLORS["primary"],
+                ),
+                spacing="0",
+                align_items="start",
+            ),
+            spacing="3",
+            padding="1rem",
+            background=COLORS["background"],
+            border_radius=RADIUS["lg"],
+            width="100%",
+            cursor="pointer",
+            _hover={"background": f"{COLORS['primary']}10"},
+            transition="all 0.2s ease",
+        ),
+        href="/login",
+        style={"text_decoration": "none"},
         width="100%",
-        spacing="3",
     )
 
 
@@ -228,145 +199,123 @@ def sidebar(current_page: str = "") -> rx.Component:
     return rx.box(
         rx.vstack(
             # Logo
-            #rx.hstack(
-            #    rx.image(
-            #        src="/logo.png",
-            #        height="40px",
-            #        fallback=rx.box(
-            #            rx.text(
-            #                "RDE",
-            #                font_weight="bold",
-            #                font_size="1.5rem",
-            #                color=COLORS["primary"],
-            #            ),
-            #            padding="0.5rem",
-            #        ),
-            #    ),
-            #    rx.text(
-            #        "Simulateur CEE",
-            #        font_weight="bold",
-            #        font_size="1.1rem",
-            #        color=COLORS["text_primary"],
-            #    ),
-            #    spacing="2",
-            #    padding="1rem",
-            #    cursor="pointer",
-            #    on_click=rx.redirect("/"),
-            #),
-
             rx.hstack(
                 rx.icon("zap", size=28, color=COLORS["primary"]),
                 rx.text(
                     "SimuPrime",
-                    font_weight="bold",
-                    font_size="1.25rem",
+                    font_size="1.5rem",
+                    font_weight="700",
                     color=COLORS["primary"],
                 ),
                 spacing="2",
-                padding="1rem",
+                padding="1.5rem 1rem",
                 cursor="pointer",
                 on_click=rx.redirect("/"),
             ),
             
-            rx.divider(margin_y="0.5rem"),
+            rx.divider(),
             
-            # Navigation principale
+            # Menu principal
             rx.vstack(
                 sidebar_section(
-                    "Menu principal",
+                    "Navigation",
                     [
                         sidebar_item(
                             "layout-dashboard",
                             "Tableau de bord",
                             "/dashboard",
-                            is_active=current_page == "dashboard"
+                            is_active=current_page == "dashboard",
                         ),
                         sidebar_item(
                             "plus-circle",
                             "Nouvelle simulation",
                             "/simulation/date-department",
-                            is_active=current_page == "simulation"
+                            is_active=current_page == "simulation",
                         ),
-                    ]
+                    ],
                 ),
-                
                 sidebar_section(
-                    "Mon compte",
+                    "Compte",
                     [
                         sidebar_item(
                             "user",
                             "Mon profil",
                             "/profile",
-                            is_active=current_page == "profile"
+                            is_active=current_page == "profile",
                         ),
-                        sidebar_item(
-                            "history",
-                            "Historique",
-                            "/dashboard",
-                            is_active=False
-                        ),
-                    ]
+                    ],
                 ),
-                
                 spacing="6",
                 width="100%",
-                align_items="stretch",
+                padding="1rem",
                 flex="1",
-                padding_y="1rem",
             ),
             
             rx.spacer(),
             
-            # Menu utilisateur
-            rx.cond(
-                UserState.is_authenticated,
-                user_menu(),
-                rx.box(),
+            # Menu utilisateur en bas (conditionnel)
+            rx.box(
+                rx.cond(
+                    AuthState.is_authenticated,
+                    user_menu(),
+                    user_menu_logged_out(),
+                ),
+                width="100%",
+                padding="0.5rem",
             ),
             
-            height="100%",
-            width="100%",
             spacing="0",
-            align_items="stretch",
+            height="100%",
         ),
-        background=COLORS["white"],
-        border_right=f"1px solid {COLORS['border']}",
         width="260px",
         min_width="260px",
         height="100vh",
+        background=COLORS["white"],
+        border_right=f"1px solid {COLORS['border']}",
+        display="flex",
+        flex_direction="column",
         position="sticky",
         top="0",
         left="0",
-        padding="0.5rem",
-        display=["none", "none", "none", "flex"],  # Caché sur mobile
     )
 
 
-def mobile_menu() -> rx.Component:
-    """Menu mobile (hamburger)."""
+# ============================================
+# MOBILE SIDEBAR - Version responsive
+# ============================================
+
+def mobile_sidebar(current_page: str = "") -> rx.Component:
+    """Sidebar mobile avec drawer."""
     return rx.drawer.root(
         rx.drawer.trigger(
             rx.icon_button(
-                rx.icon(tag="menu", size=24),
+                rx.icon("menu", size=24),
                 variant="ghost",
-                display=["flex", "flex", "flex", "none"],  # Visible uniquement sur mobile
+                size="3",
             ),
         ),
         rx.drawer.overlay(z_index="50"),
         rx.drawer.portal(
             rx.drawer.content(
                 rx.vstack(
+                    # Header avec bouton fermer
                     rx.hstack(
-                        rx.text(
-                            "Menu",
-                            font_weight="bold",
-                            font_size="1.25rem",
+                        rx.hstack(
+                            rx.icon("zap", size=24, color=COLORS["primary"]),
+                            rx.text(
+                                "SimuPrime",
+                                font_size="1.25rem",
+                                font_weight="700",
+                                color=COLORS["primary"],
+                            ),
+                            spacing="2",
                         ),
                         rx.spacer(),
                         rx.drawer.close(
                             rx.icon_button(
-                                rx.icon(tag="x", size=20),
+                                rx.icon("x", size=20),
                                 variant="ghost",
+                                size="2",
                             ),
                         ),
                         width="100%",
@@ -374,20 +323,33 @@ def mobile_menu() -> rx.Component:
                     ),
                     rx.divider(),
                     rx.vstack(
-                        sidebar_item("layout-dashboard", "Tableau de bord", "/dashboard"),
-                        sidebar_item("plus-circle", "Nouvelle simulation", "/simulation/date-department"),
-                        sidebar_item("user", "Mon profil", "/profile"),
+                        sidebar_item("layout-dashboard", "Tableau de bord", "/dashboard", current_page == "dashboard"),
+                        sidebar_item("plus-circle", "Nouvelle simulation", "/simulation/date-department", current_page == "simulation"),
+                        sidebar_item("user", "Mon profil", "/profile", current_page == "profile"),
                         rx.divider(margin_y="1rem"),
-                        rx.button(
-                            rx.hstack(
-                                rx.icon(tag="log-out", size=18),
-                                rx.text("Déconnexion"),
-                                spacing="2",
+                        rx.cond(
+                            AuthState.is_authenticated,
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon(tag="log-out", size=18),
+                                    rx.text("Déconnexion"),
+                                    spacing="2",
+                                ),
+                                variant="ghost",
+                                color_scheme="red",
+                                width="100%",
+                                on_click=AuthState.handle_logout,
                             ),
-                            variant="ghost",
-                            color_scheme="red",
-                            width="100%",
-                            on_click=UserState.handle_logout,
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon(tag="log-in", size=18),
+                                    rx.text("Se connecter"),
+                                    spacing="2",
+                                ),
+                                variant="outline",
+                                width="100%",
+                                on_click=rx.redirect("/login"),
+                            ),
                         ),
                         spacing="2",
                         width="100%",
@@ -402,6 +364,12 @@ def mobile_menu() -> rx.Component:
         ),
         direction="left",
     )
+
+
+# Alias pour compatibilité
+def mobile_menu(current_page: str = "") -> rx.Component:
+    """Alias pour mobile_sidebar (compatibilité)."""
+    return mobile_sidebar(current_page)
 
 
 # ============================================
@@ -590,6 +558,44 @@ def simulation_sidebar(current_step: int) -> rx.Component:
                 ),
                 spacing="2",
                 width="100%",
+            ),
+            
+            # Info utilisateur connecté (si applicable)
+            rx.cond(
+                AuthState.is_authenticated,
+                rx.box(
+                    rx.hstack(
+                        rx.box(
+                            rx.text(
+                                AuthState.initials,
+                                font_size="11px",
+                                font_weight="600",
+                                color=WHITE,
+                            ),
+                            width="28px",
+                            height="28px",
+                            background=PRIMARY,
+                            border_radius="50%",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                        ),
+                        rx.text(
+                            AuthState.display_name,
+                            font_size="13px",
+                            color=GRAY_700,
+                            no_of_lines=1,
+                        ),
+                        spacing="2",
+                        align="center",
+                    ),
+                    padding="8px",
+                    margin_top="8px",
+                    background=GRAY_100,
+                    border_radius="8px",
+                    width="100%",
+                ),
+                rx.box(),
             ),
             
             spacing="4",

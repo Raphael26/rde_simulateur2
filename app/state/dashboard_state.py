@@ -374,30 +374,498 @@ Manages simulation history, KPIs, and dashboard functionality
 #        yield rx.toast.info("Export en cours de développement...")
 
 
-"""État du dashboard"""
+#"""État du dashboard"""
+#import reflex as rx
+#from typing import List, Dict, Any
+#
+#
+#class DashboardState(rx.State):
+#    """État pour le tableau de bord."""
+#    
+#    simulations: List[Dict[str, Any]] = []
+#    is_loading: bool = False
+#    error_message: str = ""
+#    
+#    @rx.var
+#    def simulations_list(self) -> List[Dict[str, str]]:
+#        """Liste des simulations formatée pour l'affichage."""
+#        formatted = []
+#        for sim in self.simulations:
+#            formatted.append({
+#                "name": sim.get("name", "Sans nom"),
+#                "fiche": sim.get("fiche_code", ""),
+#                "sector": sim.get("sector", ""),
+#                "department": sim.get("department", ""),
+#                "euros": f"{sim.get('result_euros', 0):,.2f} €".replace(",", " "),
+#                "date": sim.get("created_at", "")[:10] if sim.get("created_at") else "",
+#            })
+#        return formatted
+#    
+#    @rx.var
+#    def has_simulations(self) -> bool:
+#        """Vérifie s'il y a des simulations."""
+#        return len(self.simulations) > 0
+#    
+#    @rx.var
+#    def total_simulations_str(self) -> str:
+#        """Nombre total de simulations."""
+#        return str(len(self.simulations))
+#    
+#    @rx.var
+#    def total_euros_str(self) -> str:
+#        """Total des primes en euros."""
+#        total = sum(sim.get("result_euros", 0) for sim in self.simulations)
+#        return f"{total:,.2f} €".replace(",", " ")
+#    
+#    @rx.var
+#    def total_cumacs_str(self) -> str:
+#        """Total des cumacs."""
+#        total = sum(sim.get("result_cumacs", 0) for sim in self.simulations)
+#        return f"{total:,.0f} kWh".replace(",", " ")
+#    
+#    @rx.event
+#    async def load_simulations(self):
+#        """Charge les simulations de l'utilisateur connecté."""
+#        self.is_loading = True
+#        self.error_message = ""
+#        yield
+#        
+#        try:
+#            # Essayer d'importer Supabase
+#            supabase = None
+#            try:
+#                from ..services.supabase_service import supabase as sb_client
+#                supabase = sb_client
+#            except ImportError:
+#                pass
+#            
+#            # Récupérer l'utilisateur connecté
+#            user_id = None
+#            try:
+#                from .auth_state import AuthState
+#                auth_state = await self.get_state(AuthState)
+#                user_id = getattr(auth_state, 'user_id', None)
+#            except Exception:
+#                pass
+#            
+#            if supabase and user_id:
+#                response = supabase.table("simulations").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(20).execute()
+#                if response.data:
+#                    self.simulations = response.data
+#                else:
+#                    self.simulations = []
+#            else:
+#                # Données de démo
+#                self.simulations = [
+#                    {"name": "Isolation Dupont", "fiche_code": "BAR-EN-101", "sector": "Résidentiel", "department": "Paris (75)", "result_euros": 812.50, "result_cumacs": 125000, "created_at": "2026-01-09"},
+#                    {"name": "PAC Martin", "fiche_code": "BAR-TH-104", "sector": "Résidentiel", "department": "Lyon (69)", "result_euros": 1170.00, "result_cumacs": 180000, "created_at": "2026-01-08"},
+#                    {"name": "Chaudière Bernard", "fiche_code": "BAR-TH-106", "sector": "Résidentiel", "department": "Marseille (13)", "result_euros": 494.00, "result_cumacs": 76000, "created_at": "2026-01-07"},
+#                ]
+#        except Exception as e:
+#            self.error_message = str(e)
+#            self.simulations = [
+#                {"name": "Isolation Dupont", "fiche_code": "BAR-EN-101", "sector": "Résidentiel", "department": "Paris (75)", "result_euros": 812.50, "result_cumacs": 125000, "created_at": "2026-01-09"},
+#                {"name": "PAC Martin", "fiche_code": "BAR-TH-104", "sector": "Résidentiel", "department": "Lyon (69)", "result_euros": 1170.00, "result_cumacs": 180000, "created_at": "2026-01-08"},
+#                {"name": "Chaudière Bernard", "fiche_code": "BAR-TH-106", "sector": "Résidentiel", "department": "Marseille (13)", "result_euros": 494.00, "result_cumacs": 76000, "created_at": "2026-01-07"},
+#            ]
+#        
+#        self.is_loading = False
+
+
+#"""
+#Dashboard State - Gestion des simulations et KPIs du tableau de bord
+#Charge les vraies données depuis Supabase
+#"""
+#
+#import reflex as rx
+#from typing import List, Dict, Any, Optional
+#from datetime import datetime, timedelta
+#
+#
+#class DashboardState(rx.State):
+#    """État pour le tableau de bord avec chargement Supabase."""
+#    
+#    # Données
+#    simulations: List[Dict[str, Any]] = []
+#    is_loading: bool = False
+#    error_message: str = ""
+#    debug_info: str = ""  # Pour le débogage
+#    
+#    # Stockage local de l'user_id (synchronisé avec AuthState)
+#    _current_user_id: str = ""
+#    _current_user_email: str = ""
+#    
+#    def _get_supabase_client(self):
+#        """Récupère le client Supabase de manière sécurisée."""
+#        try:
+#            # Essayer d'abord supabase_client.py
+#            from ..services.supabase_client import get_supabase_client
+#            client = get_supabase_client()
+#            if client:
+#                return client
+#        except ImportError:
+#            pass
+#        
+#        try:
+#            # Fallback sur supabase_service.py
+#            from ..services.supabase_service import get_supabase_client
+#            client = get_supabase_client()
+#            if client:
+#                return client
+#        except ImportError:
+#            pass
+#        
+#        try:
+#            # Dernier recours: variable globale
+#            from ..services.supabase_service import supabase
+#            if supabase:
+#                return supabase
+#        except ImportError:
+#            pass
+#        
+#        return None
+#    
+#    async def _get_user_id(self) -> Optional[str]:
+#        """Récupère l'ID de l'utilisateur connecté."""
+#        # D'abord vérifier le cache local
+#        if self._current_user_id:
+#            return self._current_user_id
+#        
+#        # Essayer de récupérer depuis AuthState
+#        try:
+#            from .auth_state import AuthState
+#            auth_state = await self.get_state(AuthState)
+#            if auth_state.user_id:
+#                self._current_user_id = auth_state.user_id
+#                self._current_user_email = auth_state.user_email
+#                return auth_state.user_id
+#        except Exception as e:
+#            print(f"⚠️ Erreur récupération AuthState: {e}")
+#        
+#        # Essayer de récupérer depuis Supabase directement
+#        try:
+#            client = self._get_supabase_client()
+#            if client:
+#                response = client.auth.get_user()
+#                if response and response.user:
+#                    self._current_user_id = response.user.id
+#                    self._current_user_email = response.user.email or ""
+#                    return response.user.id
+#        except Exception as e:
+#            print(f"⚠️ Erreur récupération user Supabase: {e}")
+#        
+#        return None
+#    
+#    # ==================== Computed Vars ====================
+#    
+#    @rx.var
+#    def simulations_list(self) -> List[Dict[str, str]]:
+#        """Liste des simulations formatée pour l'affichage dans le tableau."""
+#        formatted = []
+#        for sim in self.simulations:
+#            # Gérer les différents noms de colonnes possibles
+#            result_euros = sim.get("result_euros") or sim.get("result_eur") or 0
+#            result_cumacs = sim.get("result_cumacs") or 0
+#            fiche_code = sim.get("fiche_code") or sim.get("document_id") or ""
+#            created_at = sim.get("created_at") or ""
+#            
+#            formatted.append({
+#                "id": str(sim.get("id", "")),
+#                "name": sim.get("name", "Sans nom"),
+#                "fiche": fiche_code,
+#                "sector": sim.get("sector", ""),
+#                "department": sim.get("department", ""),
+#                "euros": f"{float(result_euros):,.2f} €".replace(",", " "),
+#                "date": created_at[:10] if created_at else "",
+#            })
+#        return formatted
+#    
+#    @rx.var
+#    def has_simulations(self) -> bool:
+#        """Vérifie s'il y a des simulations."""
+#        return len(self.simulations) > 0
+#    
+#    @rx.var
+#    def total_simulations_str(self) -> str:
+#        """Nombre total de simulations."""
+#        return str(len(self.simulations))
+#    
+#    @rx.var
+#    def total_euros_str(self) -> str:
+#        """Total des primes en euros."""
+#        total = 0.0
+#        for sim in self.simulations:
+#            value = sim.get("result_euros") or sim.get("result_eur") or 0
+#            total += float(value)
+#        return f"{total:,.2f} €".replace(",", " ")
+#    
+#    @rx.var
+#    def total_cumacs_str(self) -> str:
+#        """Total des cumacs."""
+#        total = 0.0
+#        for sim in self.simulations:
+#            value = sim.get("result_cumacs") or 0
+#            total += float(value)
+#        return f"{total:,.0f} kWh".replace(",", " ")
+#    
+#    @rx.var
+#    def monthly_simulations_str(self) -> str:
+#        """Nombre de simulations ce mois-ci."""
+#        now = datetime.now()
+#        first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+#        
+#        count = 0
+#        for sim in self.simulations:
+#            created_at = sim.get("created_at")
+#            if created_at:
+#                try:
+#                    # Gérer les différents formats de date
+#                    if "T" in created_at:
+#                        dt = datetime.fromisoformat(created_at.replace("Z", "+00:00").split("+")[0])
+#                    else:
+#                        dt = datetime.strptime(created_at[:10], "%Y-%m-%d")
+#                    
+#                    if dt >= first_of_month:
+#                        count += 1
+#                except Exception:
+#                    pass
+#        
+#        return str(count)
+#    
+#    @rx.var
+#    def last_simulation_date_str(self) -> str:
+#        """Date de la dernière simulation."""
+#        if not self.simulations:
+#            return "—"
+#        
+#        latest = None
+#        for sim in self.simulations:
+#            created_at = sim.get("created_at")
+#            if created_at:
+#                try:
+#                    if "T" in created_at:
+#                        dt = datetime.fromisoformat(created_at.replace("Z", "+00:00").split("+")[0])
+#                    else:
+#                        dt = datetime.strptime(created_at[:10], "%Y-%m-%d")
+#                    
+#                    if latest is None or dt > latest:
+#                        latest = dt
+#                except Exception:
+#                    pass
+#        
+#        if latest:
+#            return latest.strftime("%d/%m/%Y")
+#        return "—"
+#    
+#    # ==================== Event Handlers ====================
+#    
+#    @rx.event
+#    async def load_simulations(self):
+#        """Charge les simulations de l'utilisateur connecté depuis Supabase."""
+#        self.is_loading = True
+#        self.error_message = ""
+#        self.debug_info = ""
+#        yield
+#        
+#        try:
+#            # Récupérer le client Supabase
+#            client = self._get_supabase_client()
+#            
+#            if not client:
+#                self.debug_info = "Client Supabase non disponible"
+#                self.error_message = "Connexion à la base de données indisponible"
+#                self.simulations = []
+#                self.is_loading = False
+#                return
+#            
+#            # Récupérer l'ID utilisateur
+#            user_id = await self._get_user_id()
+#            
+#            if not user_id:
+#                self.debug_info = "Utilisateur non connecté"
+#                self.error_message = "Veuillez vous connecter pour voir vos simulations"
+#                self.simulations = []
+#                self.is_loading = False
+#                return
+#            
+#            self.debug_info = f"Chargement pour user_id: {user_id[:8]}..."
+#            
+#            # Charger les simulations depuis Supabase
+#            response = client.table("simulations")\
+#                .select("*")\
+#                .eq("user_id", user_id)\
+#                .order("created_at", desc=True)\
+#                .limit(50)\
+#                .execute()
+#            
+#            if response.data:
+#                self.simulations = response.data
+#                self.debug_info = f"✅ {len(response.data)} simulation(s) chargée(s)"
+#                print(f"✅ Dashboard: {len(response.data)} simulations chargées pour {user_id[:8]}...")
+#            else:
+#                self.simulations = []
+#                self.debug_info = "Aucune simulation trouvée"
+#                print(f"ℹ️ Dashboard: Aucune simulation pour {user_id[:8]}...")
+#            
+#        except Exception as e:
+#            error_msg = str(e)
+#            self.error_message = f"Erreur de chargement: {error_msg}"
+#            self.debug_info = f"❌ Erreur: {error_msg}"
+#            self.simulations = []
+#            print(f"❌ Dashboard erreur: {e}")
+#        
+#        self.is_loading = False
+#    
+#    @rx.event
+#    async def refresh_simulations(self):
+#        """Rafraîchit la liste des simulations."""
+#        # Réinitialiser le cache user_id pour forcer une nouvelle vérification
+#        self._current_user_id = ""
+#        yield DashboardState.load_simulations
+#    
+#    @rx.event
+#    async def delete_simulation(self, simulation_id: str):
+#        """Supprime une simulation."""
+#        try:
+#            client = self._get_supabase_client()
+#            user_id = await self._get_user_id()
+#            
+#            if not client or not user_id:
+#                yield rx.toast.error("Impossible de supprimer la simulation")
+#                return
+#            
+#            # Supprimer de Supabase (soft delete ou hard delete selon ta config)
+#            response = client.table("simulations")\
+#                .delete()\
+#                .eq("id", simulation_id)\
+#                .eq("user_id", user_id)\
+#                .execute()
+#            
+#            # Retirer de la liste locale
+#            self.simulations = [s for s in self.simulations if str(s.get("id")) != simulation_id]
+#            
+#            yield rx.toast.success("Simulation supprimée")
+#            
+#        except Exception as e:
+#            print(f"❌ Erreur suppression: {e}")
+#            yield rx.toast.error("Erreur lors de la suppression")
+#    
+#    @rx.event
+#    def view_simulation(self, simulation_id: str):
+#        """Navigue vers les détails d'une simulation."""
+#        return rx.redirect(f"/simulation/view/{simulation_id}")
+#    
+#    @rx.event
+#    def duplicate_simulation(self, simulation_id: str):
+#        """Duplique une simulation (TODO)."""
+#        return rx.toast.info("Fonctionnalité à venir")
+
+
+"""
+Dashboard State - Gestion des simulations et KPIs du tableau de bord
+Charge les vraies données depuis Supabase
+"""
+
 import reflex as rx
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timedelta
 
 
 class DashboardState(rx.State):
-    """État pour le tableau de bord."""
+    """État pour le tableau de bord avec chargement Supabase."""
     
+    # Données
     simulations: List[Dict[str, Any]] = []
     is_loading: bool = False
     error_message: str = ""
+    debug_info: str = ""  # Pour le débogage
+    
+    # Stockage local de l'user_id (synchronisé avec AuthState)
+    _current_user_id: str = ""
+    _current_user_email: str = ""
+    
+    def _get_supabase_client(self):
+        """Récupère le client Supabase de manière sécurisée."""
+        try:
+            # Essayer d'abord supabase_client.py
+            from ..services.supabase_client import get_supabase_client
+            client = get_supabase_client()
+            if client:
+                return client
+        except ImportError:
+            pass
+        
+        try:
+            # Fallback sur supabase_service.py
+            from ..services.supabase_service import get_supabase_client
+            client = get_supabase_client()
+            if client:
+                return client
+        except ImportError:
+            pass
+        
+        try:
+            # Dernier recours: variable globale
+            from ..services.supabase_service import supabase
+            if supabase:
+                return supabase
+        except ImportError:
+            pass
+        
+        return None
+    
+    async def _get_user_id(self) -> Optional[str]:
+        """Récupère l'ID de l'utilisateur connecté."""
+        # D'abord vérifier le cache local
+        if self._current_user_id:
+            return self._current_user_id
+        
+        # Essayer de récupérer depuis AuthState
+        try:
+            from .auth_state import AuthState
+            auth_state = await self.get_state(AuthState)
+            if auth_state.user_id:
+                self._current_user_id = auth_state.user_id
+                self._current_user_email = auth_state.user_email
+                return auth_state.user_id
+        except Exception as e:
+            print(f"⚠️ Erreur récupération AuthState: {e}")
+        
+        # Essayer de récupérer depuis Supabase directement
+        try:
+            client = self._get_supabase_client()
+            if client:
+                response = client.auth.get_user()
+                if response and response.user:
+                    self._current_user_id = response.user.id
+                    self._current_user_email = response.user.email or ""
+                    return response.user.id
+        except Exception as e:
+            print(f"⚠️ Erreur récupération user Supabase: {e}")
+        
+        return None
+    
+    # ==================== Computed Vars ====================
     
     @rx.var
     def simulations_list(self) -> List[Dict[str, str]]:
-        """Liste des simulations formatée pour l'affichage."""
+        """Liste des simulations formatée pour l'affichage dans le tableau."""
         formatted = []
         for sim in self.simulations:
+            # Gérer les différents noms de colonnes possibles
+            result_euros = sim.get("result_euros") or sim.get("result_eur") or 0
+            result_cumacs = sim.get("result_cumacs") or 0
+            fiche_code = sim.get("fiche_code") or sim.get("document_id") or ""
+            created_at = sim.get("created_at") or ""
+            
             formatted.append({
+                "id": str(sim.get("id", "")),
                 "name": sim.get("name", "Sans nom"),
-                "fiche": sim.get("fiche_code", ""),
+                "fiche": fiche_code,
                 "sector": sim.get("sector", ""),
                 "department": sim.get("department", ""),
-                "euros": f"{sim.get('result_euros', 0):,.2f} €".replace(",", " "),
-                "date": sim.get("created_at", "")[:10] if sim.get("created_at") else "",
+                "euros": f"{float(result_euros):,.2f} €".replace(",", " "),
+                "date": created_at[:10] if created_at else "",
             })
         return formatted
     
@@ -414,59 +882,169 @@ class DashboardState(rx.State):
     @rx.var
     def total_euros_str(self) -> str:
         """Total des primes en euros."""
-        total = sum(sim.get("result_euros", 0) for sim in self.simulations)
+        total = 0.0
+        for sim in self.simulations:
+            value = sim.get("result_euros") or sim.get("result_eur") or 0
+            total += float(value)
         return f"{total:,.2f} €".replace(",", " ")
     
     @rx.var
     def total_cumacs_str(self) -> str:
         """Total des cumacs."""
-        total = sum(sim.get("result_cumacs", 0) for sim in self.simulations)
+        total = 0.0
+        for sim in self.simulations:
+            value = sim.get("result_cumacs") or 0
+            total += float(value)
         return f"{total:,.0f} kWh".replace(",", " ")
+    
+    @rx.var
+    def monthly_simulations_str(self) -> str:
+        """Nombre de simulations ce mois-ci."""
+        now = datetime.now()
+        first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        count = 0
+        for sim in self.simulations:
+            created_at = sim.get("created_at")
+            if created_at:
+                try:
+                    # Gérer les différents formats de date
+                    if "T" in created_at:
+                        dt = datetime.fromisoformat(created_at.replace("Z", "+00:00").split("+")[0])
+                    else:
+                        dt = datetime.strptime(created_at[:10], "%Y-%m-%d")
+                    
+                    if dt >= first_of_month:
+                        count += 1
+                except Exception:
+                    pass
+        
+        return str(count)
+    
+    @rx.var
+    def last_simulation_date_str(self) -> str:
+        """Date de la dernière simulation."""
+        if not self.simulations:
+            return "—"
+        
+        latest = None
+        for sim in self.simulations:
+            created_at = sim.get("created_at")
+            if created_at:
+                try:
+                    if "T" in created_at:
+                        dt = datetime.fromisoformat(created_at.replace("Z", "+00:00").split("+")[0])
+                    else:
+                        dt = datetime.strptime(created_at[:10], "%Y-%m-%d")
+                    
+                    if latest is None or dt > latest:
+                        latest = dt
+                except Exception:
+                    pass
+        
+        if latest:
+            return latest.strftime("%d/%m/%Y")
+        return "—"
+    
+    # ==================== Event Handlers ====================
     
     @rx.event
     async def load_simulations(self):
-        """Charge les simulations de l'utilisateur connecté."""
+        """Charge les simulations de l'utilisateur connecté depuis Supabase."""
         self.is_loading = True
         self.error_message = ""
+        self.debug_info = ""
         yield
         
         try:
-            # Essayer d'importer Supabase
-            supabase = None
-            try:
-                from ..services.supabase_service import supabase as sb_client
-                supabase = sb_client
-            except ImportError:
-                pass
+            # Récupérer le client Supabase
+            client = self._get_supabase_client()
             
-            # Récupérer l'utilisateur connecté
-            user_id = None
-            try:
-                from .auth_state import AuthState
-                auth_state = await self.get_state(AuthState)
-                user_id = getattr(auth_state, 'user_id', None)
-            except Exception:
-                pass
+            if not client:
+                self.debug_info = "Client Supabase non disponible"
+                self.error_message = "Connexion à la base de données indisponible"
+                self.simulations = []
+                self.is_loading = False
+                return
             
-            if supabase and user_id:
-                response = supabase.table("simulations").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(20).execute()
-                if response.data:
-                    self.simulations = response.data
-                else:
-                    self.simulations = []
+            # Récupérer l'ID utilisateur
+            user_id = await self._get_user_id()
+            
+            if not user_id:
+                self.debug_info = "Utilisateur non connecté"
+                self.error_message = "Veuillez vous connecter pour voir vos simulations"
+                self.simulations = []
+                self.is_loading = False
+                return
+            
+            self.debug_info = f"Chargement pour user_id: {user_id[:8]}..."
+            
+            # Charger les simulations depuis Supabase
+            response = client.table("simulations")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .order("created_at", desc=True)\
+                .limit(50)\
+                .execute()
+            
+            if response.data:
+                self.simulations = response.data
+                self.debug_info = f"✅ {len(response.data)} simulation(s) chargée(s)"
+                print(f"✅ Dashboard: {len(response.data)} simulations chargées pour {user_id[:8]}...")
             else:
-                # Données de démo
-                self.simulations = [
-                    {"name": "Isolation Dupont", "fiche_code": "BAR-EN-101", "sector": "Résidentiel", "department": "Paris (75)", "result_euros": 812.50, "result_cumacs": 125000, "created_at": "2026-01-09"},
-                    {"name": "PAC Martin", "fiche_code": "BAR-TH-104", "sector": "Résidentiel", "department": "Lyon (69)", "result_euros": 1170.00, "result_cumacs": 180000, "created_at": "2026-01-08"},
-                    {"name": "Chaudière Bernard", "fiche_code": "BAR-TH-106", "sector": "Résidentiel", "department": "Marseille (13)", "result_euros": 494.00, "result_cumacs": 76000, "created_at": "2026-01-07"},
-                ]
+                self.simulations = []
+                self.debug_info = "Aucune simulation trouvée"
+                print(f"ℹ️ Dashboard: Aucune simulation pour {user_id[:8]}...")
+            
         except Exception as e:
-            self.error_message = str(e)
-            self.simulations = [
-                {"name": "Isolation Dupont", "fiche_code": "BAR-EN-101", "sector": "Résidentiel", "department": "Paris (75)", "result_euros": 812.50, "result_cumacs": 125000, "created_at": "2026-01-09"},
-                {"name": "PAC Martin", "fiche_code": "BAR-TH-104", "sector": "Résidentiel", "department": "Lyon (69)", "result_euros": 1170.00, "result_cumacs": 180000, "created_at": "2026-01-08"},
-                {"name": "Chaudière Bernard", "fiche_code": "BAR-TH-106", "sector": "Résidentiel", "department": "Marseille (13)", "result_euros": 494.00, "result_cumacs": 76000, "created_at": "2026-01-07"},
-            ]
+            error_msg = str(e)
+            self.error_message = f"Erreur de chargement: {error_msg}"
+            self.debug_info = f"❌ Erreur: {error_msg}"
+            self.simulations = []
+            print(f"❌ Dashboard erreur: {e}")
         
         self.is_loading = False
+    
+    @rx.event
+    async def refresh_simulations(self):
+        """Rafraîchit la liste des simulations."""
+        # Réinitialiser le cache user_id pour forcer une nouvelle vérification
+        self._current_user_id = ""
+        yield DashboardState.load_simulations
+    
+    @rx.event
+    async def delete_simulation(self, simulation_id: str):
+        """Supprime une simulation."""
+        try:
+            client = self._get_supabase_client()
+            user_id = await self._get_user_id()
+            
+            if not client or not user_id:
+                yield rx.toast.error("Impossible de supprimer la simulation")
+                return
+            
+            # Supprimer de Supabase (soft delete ou hard delete selon ta config)
+            response = client.table("simulations")\
+                .delete()\
+                .eq("id", simulation_id)\
+                .eq("user_id", user_id)\
+                .execute()
+            
+            # Retirer de la liste locale
+            self.simulations = [s for s in self.simulations if str(s.get("id")) != simulation_id]
+            
+            yield rx.toast.success("Simulation supprimée")
+            
+        except Exception as e:
+            print(f"❌ Erreur suppression: {e}")
+            yield rx.toast.error("Erreur lors de la suppression")
+    
+    @rx.event
+    def view_simulation(self, simulation_id: str):
+        """Navigue vers les détails d'une simulation."""
+        return rx.redirect(f"/simulation/view/{simulation_id}")
+    
+    @rx.event
+    def duplicate_simulation(self, simulation_id: str):
+        """Duplique une simulation (TODO)."""
+        return rx.toast.info("Fonctionnalité à venir")

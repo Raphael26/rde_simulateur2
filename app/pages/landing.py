@@ -1,7 +1,7 @@
 """Page Landing - Page d'accueil"""
 import reflex as rx
 from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
-from ..state import AuthState
+from ..state.auth_state import AuthState
 
 
 def hero_section() -> rx.Component:
@@ -27,34 +27,112 @@ def hero_section() -> rx.Component:
                 text_align="center",
                 max_width="600px",
             ),
-            rx.hstack(
-                rx.link(
-                    rx.button(
-                        "Commencer une simulation",
-                        size="3",
-                        style={
-                            "background": Colors.WHITE,
-                            "color": Colors.PRIMARY,
-                            "padding": f"{Spacing.MD} {Spacing.XL}",
-                            "font_weight": Typography.WEIGHT_SEMIBOLD,
-                        },
+            # Boutons conditionnels selon l'état de connexion
+            rx.cond(
+                AuthState.is_authenticated,
+                # === UTILISATEUR CONNECTÉ ===
+                rx.vstack(
+                    # Message de bienvenue
+                    rx.hstack(
+                        rx.box(
+                            rx.text(
+                                AuthState.initials,
+                                font_size="0.875rem",
+                                font_weight="600",
+                                color=Colors.PRIMARY,
+                            ),
+                            width="36px",
+                            height="36px",
+                            background=Colors.WHITE,
+                            border_radius="50%",
+                            display="flex",
+                            align_items="center",
+                            justify_content="center",
+                        ),
+                        rx.text(
+                            rx.fragment("Bonjour, ", AuthState.display_name, " !"),
+                            color=Colors.WHITE,
+                            font_weight="500",
+                            font_size=Typography.SIZE_BASE,
+                        ),
+                        spacing="2",
+                        align="center",
+                        padding="0.5rem 1rem",
+                        background="rgba(255,255,255,0.15)",
+                        border_radius=Borders.RADIUS_FULL,
+                        margin_bottom="1rem",
                     ),
-                    href="/simulation/date-department",
-                ),
-                rx.link(
-                    rx.button(
-                        "Se connecter",
-                        size="3",
-                        variant="outline",
-                        style={
-                            "border_color": Colors.WHITE,
-                            "color": Colors.WHITE,
-                            "padding": f"{Spacing.MD} {Spacing.XL}",
-                        },
+                    # Boutons pour utilisateur connecté
+                    rx.hstack(
+                        rx.link(
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon("plus-circle", size=18),
+                                    rx.text("Nouvelle simulation"),
+                                    spacing="2",
+                                ),
+                                size="3",
+                                style={
+                                    "background": Colors.WHITE,
+                                    "color": Colors.PRIMARY,
+                                    "padding": f"{Spacing.MD} {Spacing.XL}",
+                                    "font_weight": Typography.WEIGHT_SEMIBOLD,
+                                },
+                            ),
+                            href="/simulation/date-department",
+                        ),
+                        rx.link(
+                            rx.button(
+                                rx.hstack(
+                                    rx.icon("layout-dashboard", size=18),
+                                    rx.text("Mon tableau de bord"),
+                                    spacing="2",
+                                ),
+                                size="3",
+                                variant="outline",
+                                style={
+                                    "border_color": Colors.WHITE,
+                                    "color": Colors.WHITE,
+                                    "padding": f"{Spacing.MD} {Spacing.XL}",
+                                },
+                            ),
+                            href="/dashboard",
+                        ),
+                        spacing="4",
                     ),
-                    href="/login",
+                    spacing="2",
+                    align="center",
                 ),
-                spacing="4",
+                # === UTILISATEUR NON CONNECTÉ ===
+                rx.hstack(
+                    rx.link(
+                        rx.button(
+                            "Commencer une simulation",
+                            size="3",
+                            style={
+                                "background": Colors.WHITE,
+                                "color": Colors.PRIMARY,
+                                "padding": f"{Spacing.MD} {Spacing.XL}",
+                                "font_weight": Typography.WEIGHT_SEMIBOLD,
+                            },
+                        ),
+                        href="/simulation/date-department",
+                    ),
+                    rx.link(
+                        rx.button(
+                            "Se connecter",
+                            size="3",
+                            variant="outline",
+                            style={
+                                "border_color": Colors.WHITE,
+                                "color": Colors.WHITE,
+                                "padding": f"{Spacing.MD} {Spacing.XL}",
+                            },
+                        ),
+                        href="/login",
+                    ),
+                    spacing="4",
+                ),
             ),
             spacing="5",
             align="center",
@@ -147,12 +225,21 @@ def sectors_section() -> rx.Component:
 def cta_section() -> rx.Component:
     return rx.box(
         rx.vstack(
-            rx.text("Prêt à calculer vos primes ?", font_size=Typography.SIZE_2XL, font_weight=Typography.WEIGHT_BOLD, color=Colors.WHITE),
+            rx.text(
+                "Prêt à calculer vos primes ?",
+                font_size=Typography.SIZE_2XL,
+                font_weight=Typography.WEIGHT_BOLD,
+                color=Colors.WHITE,
+            ),
             rx.link(
                 rx.button(
                     "Démarrer maintenant",
                     size="3",
-                    style={"background": Colors.WHITE, "color": Colors.PRIMARY, "padding": f"{Spacing.MD} {Spacing.XL}"},
+                    style={
+                        "background": Colors.WHITE,
+                        "color": Colors.PRIMARY,
+                        "padding": f"{Spacing.MD} {Spacing.XL}",
+                    },
                 ),
                 href="/simulation/date-department",
             ),
@@ -168,7 +255,7 @@ def cta_section() -> rx.Component:
 def footer_section() -> rx.Component:
     return rx.box(
         rx.hstack(
-            rx.text("© 2024 SimuPrime", color=Colors.GRAY_500),
+            rx.text("© 2025 SimuPrime", color=Colors.GRAY_500),
             rx.spacer(),
             rx.hstack(
                 rx.link("Mentions légales", href="#", color=Colors.GRAY_500),
