@@ -17,24 +17,28 @@ def step5_recap() -> rx.Component:
             rx.icon("map-pin", size=14, color=Colors.GRAY_400),
             rx.text(SimulationState.department, font_size=Typography.SIZE_SM, color=Colors.GRAY_600, no_of_lines=1),
             spacing="1",
+            align="center",
         ),
         rx.box(width="1px", height="16px", background=Colors.GRAY_300),
         rx.hstack(
             rx.icon("building-2", size=14, color=Colors.GRAY_400),
             rx.text(SimulationState.sector, font_size=Typography.SIZE_SM, color=Colors.GRAY_600, no_of_lines=1),
             spacing="1",
+            align="center",
         ),
         rx.box(width="1px", height="16px", background=Colors.GRAY_300),
         rx.hstack(
             rx.icon("layers", size=14, color=Colors.GRAY_400),
             rx.text(SimulationState.typology, font_size=Typography.SIZE_SM, color=Colors.GRAY_600, no_of_lines=1),
             spacing="1",
+            align="center",
         ),
         rx.box(width="1px", height="16px", background=Colors.GRAY_300),
         rx.hstack(
             rx.icon("file-text", size=14, color=Colors.PRIMARY),
             rx.text(SimulationState.selected_fiche, font_size=Typography.SIZE_SM, color=Colors.PRIMARY, font_weight="600"),
             spacing="1",
+            align="center",
         ),
         spacing="3",
         padding="0.75rem 1rem",
@@ -43,6 +47,7 @@ def step5_recap() -> rx.Component:
         width="100%",
         flex_wrap="wrap",
         justify="center",
+        align="center",
     )
 
 
@@ -110,6 +115,7 @@ def render_select_field(field: rx.Var[Dict[str, str]]) -> rx.Component:
                     color=Colors.GRAY_700,
                 ),
                 spacing="2",
+                align="center",
             ),
             rx.select.root(
                 rx.select.trigger(
@@ -153,6 +159,7 @@ def render_number_field(field: rx.Var[Dict[str, str]]) -> rx.Component:
                     color=Colors.GRAY_700,
                 ),
                 spacing="2",
+                align="center",
             ),
             rx.input(
                 placeholder="Entrez une valeur numérique",
@@ -273,6 +280,7 @@ def fiche_info_card() -> rx.Component:
                     rx.icon("check-circle", size=16, color=Colors.SUCCESS),
                     rx.text("Configurée", font_size=Typography.SIZE_XS, color=Colors.SUCCESS),
                     spacing="1",
+                    align="center",
                 ),
                 rx.cond(
                     SimulationState.is_loading,
@@ -281,6 +289,7 @@ def fiche_info_card() -> rx.Component:
                         rx.icon("alert-circle", size=16, color=Colors.WARNING),
                         rx.text("Mode démo", font_size=Typography.SIZE_XS, color=Colors.WARNING),
                         spacing="1",
+                        align="center",
                     ),
                 ),
             ),
@@ -307,6 +316,7 @@ def simulation_name_card() -> rx.Component:
                     color=Colors.GRAY_700,
                 ),
                 spacing="2",
+                align="center",
             ),
             rx.input(
                 placeholder="Ex: Isolation maison M. Dupont",
@@ -344,6 +354,7 @@ def beneficiary_card_section() -> rx.Component:
                     color=Colors.GRAY_700,
                 ),
                 spacing="2",
+                align="center",
             ),
             rx.hstack(
                 rx.foreach(SimulationState.beneficiary_types_list, beneficiary_card),
@@ -361,6 +372,7 @@ def beneficiary_card_section() -> rx.Component:
                         color=Colors.SUCCESS,
                     ),
                     spacing="2",
+                    align="center",
                 ),
                 rx.fragment(),
             ),
@@ -388,12 +400,14 @@ def info_card_section() -> rx.Component:
                     color=Colors.GRAY_700,
                 ),
                 spacing="2",
+                align="center",
             ),
             rx.hstack(
                 rx.hstack(
                     rx.icon("thermometer", size=14, color=Colors.INFO),
                     rx.text("Zone climatique :", font_size=Typography.SIZE_SM, color=Colors.GRAY_600),
                     spacing="2",
+                    align="center",
                 ),
                 rx.text(
                     SimulationState.zone_climatique,
@@ -408,6 +422,7 @@ def info_card_section() -> rx.Component:
                     rx.icon("calendar", size=14, color=Colors.GRAY_400),
                     rx.text("Date de signature :", font_size=Typography.SIZE_SM, color=Colors.GRAY_600),
                     spacing="2",
+                    align="center",
                 ),
                 rx.text(
                     SimulationState.date_signature,
@@ -422,6 +437,7 @@ def info_card_section() -> rx.Component:
                     rx.icon("map-pin", size=14, color=Colors.GRAY_400),
                     rx.text("Département :", font_size=Typography.SIZE_SM, color=Colors.GRAY_600),
                     spacing="2",
+                    align="center",
                 ),
                 rx.text(
                     SimulationState.department,
@@ -522,6 +538,7 @@ def step5_form_page() -> rx.Component:
                             rx.icon("chevron-left", size=18),
                             rx.text("Retour"),
                             spacing="2",
+                            align="center",
                         ),
                         variant="ghost",
                         on_click=rx.redirect("/simulation/fiches"),
@@ -537,6 +554,7 @@ def step5_form_page() -> rx.Component:
                             ),
                             rx.text("Calculer la prime"),
                             spacing="2",
+                            align="center",
                         ),
                         disabled=(SimulationState.beneficiary_type == "") | SimulationState.is_loading,
                         on_click=SimulationState.execute_simulation,
