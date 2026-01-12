@@ -12,8 +12,8 @@
         header_up Upgrade {http.request.header.Upgrade}
     }
 
-    # Frontend statique
-    root * /app/.web/_static
+    # Frontend statique - CHEMIN CORRIGÉ
+    root * /app/.web/build/client
     try_files {path} {path}/ /index.html
     file_server
 

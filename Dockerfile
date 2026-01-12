@@ -39,14 +39,6 @@ RUN chmod +x start.sh
 # Initialiser et exporter le frontend Reflex
 RUN reflex init && reflex export --frontend-only --no-zip
 
-# Explorer la structure pour debug
-RUN echo "=== Structure après export ===" && \
-    ls -la && \
-    echo "=== Contenu .web ===" && \
-    ls -la .web/ || echo "Pas de .web" && \
-    echo "=== Recherche index.html ===" && \
-    find . -name "index.html" -type f 2>/dev/null || echo "Pas d'index.html trouvé"
-
 # Exposer le port
 EXPOSE 8080
 
