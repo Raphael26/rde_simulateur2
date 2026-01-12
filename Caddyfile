@@ -1,0 +1,42 @@
+:{$PORT} {
+    # Logs pour debug
+    log {
+        output stdout
+        format console
+    }
+    
+    # Proxifier TOUTES les requêtes backend Reflex
+    @backend {
+        path /_event
+        path /_event/*
+        path /ping
+        path /_upload
+        path /_upload/*
+        path /api/*
+    }
+    reverse_proxy @backend 127.0.0.1:8000
+    
+    # WebSocket - important pour Reflex
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websocket 127.0.0.1:8000
+    
+    # Servir les fichiers statiques du frontend Reflex
+    root * /app/.web/_static
+    
+    # SPA: servir index.html pour toutes les routes non trouvées
+    try_files {path} {path}/ /index.html
+    file_server
+    
+    # Compression
+    encode gzip zstd
+    
+    # Headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+        -Server
+    }
+}
