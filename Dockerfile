@@ -1,5 +1,5 @@
-# Dockerfile avec Caddy pour RDE Simulateur CEE sur Railway
-# NOTE: Utilisez ce fichier SEULEMENT si la solution simple ne fonctionne pas
+# Dockerfile pour RDE Simulateur CEE sur Railway
+# SOLUTION SIMPLE - Sans Caddy
 
 FROM python:3.11-slim
 
@@ -7,16 +7,6 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
-    debian-keyring \
-    debian-archive-keyring \
-    apt-transport-https \
-    && rm -rf /var/lib/apt/lists/*
-
-# Installer Caddy
-RUN curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
-    && apt-get update \
-    && apt-get install -y caddy \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Node.js 20
@@ -37,8 +27,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copier le reste du projet
 COPY . .
 
-# Rendre les scripts exécutables
-RUN chmod +x start.sh start_with_caddy.sh
+# Rendre le script exécutable
+RUN chmod +x start.sh
 
 # Initialiser Reflex (prépare la structure)
 RUN reflex init
@@ -49,5 +39,5 @@ ENV REFLEX_SKIP_COMPILE=true
 # Exposer le port
 EXPOSE 8080
 
-# Utiliser le script de démarrage avec Caddy
-CMD ["./start_with_caddy.sh"]
+# Utiliser le script de démarrage
+CMD ["./start.sh"]
