@@ -28,8 +28,11 @@ COPY . .
 # Rendre le script exécutable
 RUN chmod +x start.sh
 
-# Initialiser Reflex (prépare le frontend)
+# Initialiser Reflex (prépare la structure)
 RUN reflex init
+
+# Variables d'environnement pour Reflex
+ENV REFLEX_SKIP_COMPILE=true
 
 # Exposer le port
 EXPOSE 8080

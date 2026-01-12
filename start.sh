@@ -7,6 +7,13 @@ set -e
 export PORT=${PORT:-8080}
 
 echo "🚀 Démarrage de RDE Simulateur CEE sur le port $PORT"
+echo "📍 Backend Host: 0.0.0.0"
+echo "📍 Backend Port: $PORT"
 
-# Lancer Reflex en mode production (frontend + backend ensemble)
-exec reflex run --env prod --backend-host 0.0.0.0 --backend-port $PORT
+# Export du frontend avant le démarrage
+echo "🔨 Export du frontend..."
+reflex export --frontend-only
+
+# Lancer Reflex en mode production
+echo "🚀 Démarrage du serveur..."
+exec reflex run --env prod --backend-host 0.0.0.0 --backend-port $PORT --frontend-port $PORT
