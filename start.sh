@@ -1,20 +1,34 @@
 #!/bin/bash
 # Script de démarrage pour Railway - RDE Simulateur CEE
-# SOLUTION SIMPLE - Sans Caddy
 
 set -e
 
-# Utiliser le port fourni par Railway, ou 8080 par défaut
+# Port public fourni par Railway
 export PORT=${PORT:-8080}
 
-echo "🚀 Démarrage de RDE Simulateur CEE sur le port $PORT"
-echo "📍 Backend Host: 0.0.0.0"
-echo "📍 Backend Port: $PORT"
+echo "🚀 Démarrage de RDE Simulateur CEE"
+echo "   Port public (Caddy): $PORT"
+echo "   Port backend (Reflex): 8000"
 
-# Export du frontend avant le démarrage
-echo "🔨 Export du frontend..."
-reflex export --frontend-only
+# Lancer le backend Reflex en arrière-plan
+echo "📦 Démarrage du backend Reflex..."
+reflex run --env prod --backend-only --backend-host 0.0.0.0 --backend-port 8000 &
+BACKEND_PID=$!
 
-# Lancer Reflex en mode production
-echo "🚀 Démarrage du serveur..."
-exec reflex run --env prod --backend-host 0.0.0.0 --backend-port $PORT --frontend-port $PORT
+# Attendre que le backend soit prêt
+echo "⏳ Attente du backend..."
+sleep 10
+
+# Vérifier que le backend répond
+for i in {1..30}; do
+    if curl -s http://127.0.0.1:8000/ping > /dev/null 2>&1; then
+        echo "✅ Backend prêt!"
+        break
+    fi
+    echo "   Tentative $i/30..."
+    sleep 2
+done
+
+# Lancer Caddy
+echo "🌐 Démarrage de Caddy sur le port $PORT..."
+caddy run --config /app/Caddyfile --adapter caddyfile

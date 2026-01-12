@@ -13,7 +13,6 @@
 #)
 #
 
-
 """Configuration Reflex pour RDE Simulateur CEE."""
 
 import reflex as rx
@@ -42,25 +41,11 @@ if IS_PRODUCTION:
     RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
     RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL", "")
     
-    # Déterminer l'URL de l'API
     if RAILWAY_PUBLIC_DOMAIN:
-        # Frontend et backend sur le même domaine
-        api_url = f"https://{RAILWAY_PUBLIC_DOMAIN}"
+        # Frontend et backend sur le même domaine (via Caddy)
+        base_config["api_url"] = f"https://{RAILWAY_PUBLIC_DOMAIN}"
     elif RAILWAY_STATIC_URL:
-        api_url = RAILWAY_STATIC_URL
-    else:
-        # Fallback: utiliser le domaine depuis l'URL
-        api_url = ""
-    
-    if api_url:
-        base_config["api_url"] = api_url
-        print(f"🌐 API URL configurée: {api_url}")
-    
-    # Configuration production
-    base_config["deploy_url"] = api_url if api_url else None
-
-else:
-    # Mode développement local
-    print("🔧 Mode développement local")
+        base_config["api_url"] = RAILWAY_STATIC_URL
+    # Si aucun domaine n'est défini, Reflex utilisera des chemins relatifs
 
 config = rx.Config(**base_config)

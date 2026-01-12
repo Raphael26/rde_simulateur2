@@ -1,12 +1,18 @@
 # Dockerfile pour RDE Simulateur CEE sur Railway
-# SOLUTION SIMPLE - Sans Caddy
-
 FROM python:3.11-slim
 
-# Installer les dépendances système
+# Installer les dépendances système + Caddy
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
+    debian-keyring \
+    debian-archive-keyring \
+    apt-transport-https \
+    gnupg \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
+    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
+    && apt-get update \
+    && apt-get install -y caddy \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Node.js 20
@@ -30,11 +36,11 @@ COPY . .
 # Rendre le script exécutable
 RUN chmod +x start.sh
 
-# Initialiser Reflex (prépare la structure)
-RUN reflex init
+# Initialiser et exporter le frontend Reflex
+RUN reflex init && reflex export --frontend-only --no-zip
 
-# Variables d'environnement pour Reflex
-ENV REFLEX_SKIP_COMPILE=true
+# Vérifier que les fichiers statiques existent
+RUN ls -la .web/_static/ && echo "✅ Frontend exporté avec succès"
 
 # Exposer le port
 EXPOSE 8080
