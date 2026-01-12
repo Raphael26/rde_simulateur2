@@ -5,8 +5,6 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y \
     curl \
     unzip \
-    nodejs \
-    npm \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer Node.js 20 (version LTS)
@@ -26,6 +24,9 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copier le reste du projet
 COPY . .
 
+# Rendre le script de démarrage exécutable
+RUN chmod +x start.sh
+
 # Initialiser Reflex et exporter le frontend
 RUN reflex init \
     && reflex export --frontend-only --no-zip
@@ -33,5 +34,5 @@ RUN reflex init \
 # Exposer le port (Railway injecte $PORT)
 EXPOSE 8080
 
-# Commande de démarrage
-CMD reflex run --env prod --backend-only --backend-host 0.0.0.0 --backend-port ${PORT:-8080}
+# Utiliser le script de démarrage
+CMD ["./start.sh"]
