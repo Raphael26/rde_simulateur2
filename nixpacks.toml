@@ -1,10 +1,11 @@
-# Configuration Nixpacks pour Railway
+# Configuration Nixpacks pour Railway - RDE Simulateur CEE
 [phases.setup]
-nixPkgs = ["python311", "nodejs_20"]
+nixPkgs = ["python311", "python311Packages.pip", "nodejs_20"]
 
 [phases.install]
 dependsOn = ["setup"]
 cmds = [
+    "python -m ensurepip --upgrade",
     "python -m pip install --upgrade pip",
     "python -m pip install -r requirements.txt"
 ]
@@ -21,3 +22,4 @@ cmd = "python -m reflex run --env prod --backend-only --backend-host 0.0.0.0 --b
 
 [variables]
 PYTHON_VERSION = "3.11"
+PIP_NO_CACHE_DIR = "1"
