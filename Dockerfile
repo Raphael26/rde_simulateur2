@@ -1,49 +1,52 @@
-# Dockerfile pour RDE Simulateur CEE sur Railway
+# Utilise une image Python officielle
 FROM python:3.11-slim
 
-# Installer les dépendances système + Caddy
-RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    debian-keyring \
-    debian-archive-keyring \
-    apt-transport-https \
-    gnupg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg \
-    && curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list \
-    && apt-get update \
-    && apt-get install -y caddy \
-    && rm -rf /var/lib/apt/lists/*
+# Installe les paquets système requis
+RUN apt-get update && \
+    apt-get install -y unzip curl caddy && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Installer Node.js 20
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Définir le répertoire de travail
+# Crée un dossier de travail
 WORKDIR /app
 
-# Copier les fichiers de dépendances
-COPY requirements.txt .
-
-# Installer les dépendances Python
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copier le reste du projet
+# Copie les fichiers du projet
 COPY . .
 
-# Rendre le script exécutable
-RUN chmod +x start.sh
+# Installe les dépendances Python
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Définir le domaine pour le build du frontend
-ENV RAILWAY_PUBLIC_DOMAIN=rdesimulateur2-production.up.railway.app
-
-# Initialiser et exporter le frontend Reflex
-RUN reflex init && reflex export --frontend-only --no-zip
+# Initialiser et pré-compiler le frontend
+RUN reflex init
+RUN reflex export --frontend-only --no-zip
 
 # Exposer le port
 EXPOSE 8080
 
-# Utiliser le script de démarrage
-CMD ["./start.sh"]
+# Copier le Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
+# Script de démarrage
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "Starting Reflex backend on port 8000..."\n\
+reflex run --env prod --backend-only --loglevel debug &\n\
+BACKEND_PID=$!\n\
+\n\
+# Wait for backend to be ready\n\
+echo "Waiting for backend to start..."\n\
+for i in {1..30}; do\n\
+  if curl -s http://localhost:8000/ping > /dev/null 2>&1; then\n\
+    echo "Backend is ready!"\n\
+    break\n\
+  fi\n\
+  echo "Waiting... ($i/30)"\n\
+  sleep 1\n\
+done\n\
+\n\
+echo "Starting Caddy on port 8080..."\n\
+exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+CMD ["/bin/bash", "/app/start.sh"]

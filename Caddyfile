@@ -1,28 +1,32 @@
-:{$PORT} {
-    log {
-        output stdout
-        level DEBUG
+:8080 {
+    # API and WebSocket routes to backend
+    # Match all variations of /_event path
+    @eventPath {
+        path /_event
+        path /_event/
+        path /_event/*
     }
-
-    # Tout ce qui commence par /_event va au backend
-    handle /_event* {
-        reverse_proxy 127.0.0.1:8000
+    handle @eventPath {
+        reverse_proxy localhost:8000
     }
-
-    # /ping va au backend
+    
     handle /ping {
-        reverse_proxy 127.0.0.1:8000
+        reverse_proxy localhost:8000
     }
-
-    # /_upload va au backend  
-    handle /_upload* {
-        reverse_proxy 127.0.0.1:8000
+    
+    @uploadPath {
+        path /_upload
+        path /_upload/
+        path /_upload/*
     }
-
-    # Tout le reste = fichiers statiques
+    handle @uploadPath {
+        reverse_proxy localhost:8000
+    }
+    
+    # Static files
     handle {
-        root * /app/.web/build/client
-        try_files {path} /index.html
+        root * /app/.web/_static
+        try_files {path} {path}/ /index.html
         file_server
     }
 }
