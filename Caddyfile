@@ -27,9 +27,9 @@
         reverse_proxy localhost:8000
     }
     
-    # Static files
+    # Static files - CORRIGÉ: _static pas build/client
     handle {
-        root * /app/.web/build/client
+        root * /app/.web/_static
         try_files {path} {path}/ /index.html
         file_server
     }
