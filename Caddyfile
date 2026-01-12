@@ -1,36 +1,19 @@
-:{$PORT:8080} {
-    log {
-        output stdout
-        level DEBUG
+:8080 {
+    # Routes API et WebSocket vers le backend
+    @backend {
+        path /_event /_event/ /_event/*
+        path /ping
+        path /_upload /_upload/ /_upload/*
+    }
+    handle @backend {
+        reverse_proxy localhost:8000
     }
 
-    # API and WebSocket routes to backend
-    @eventPath {
-        path /_event
-        path /_event/
-        path /_event/*
-    }
-    handle @eventPath {
-        reverse_proxy localhost:8000
-    }
-    
-    handle /ping {
-        reverse_proxy localhost:8000
-    }
-    
-    @uploadPath {
-        path /_upload
-        path /_upload/
-        path /_upload/*
-    }
-    handle @uploadPath {
-        reverse_proxy localhost:8000
-    }
-    
-    # Static files
+    # Fichiers statiques
     handle {
         root * /app/.web/_static
         try_files {path} {path}/ /index.html
         file_server
+        encode gzip
     }
 }

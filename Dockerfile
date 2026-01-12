@@ -1,55 +1,42 @@
-# Utilise une image Python officielle
+# Dockerfile pour RDE Simulateur CEE sur Railway
 FROM python:3.11-slim
 
-# Installe les paquets système requis
+# Installer les dépendances système
 RUN apt-get update && \
-    apt-get install -y unzip curl caddy && \
+    apt-get install -y --no-install-recommends unzip curl caddy && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Crée un dossier de travail
 WORKDIR /app
 
-# Copie les fichiers du projet
-COPY . .
-
-# Installe les dépendances Python
+# Copier et installer les dépendances Python
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Initialiser et pré-compiler le frontend
-RUN reflex init
-RUN reflex export --frontend-only --no-zip
+# Copier le projet
+COPY . .
 
-# Exposer le port
+# Initialiser et compiler le frontend Reflex
+RUN reflex init && reflex export --frontend-only --no-zip
+
+# Configuration
 EXPOSE 8080
-
-# Copier le Caddyfile
 COPY Caddyfile /etc/caddy/Caddyfile
 
 # Script de démarrage
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-export PORT=${PORT:-8080}\n\
-export BACKEND_PORT=8000\n\
-echo "Port public: $PORT"\n\
-echo "Backend port: $BACKEND_PORT"\n\
+# Démarrer le backend Reflex\n\
+reflex run --env prod --backend-only &\n\
 \n\
-echo "Starting Reflex backend on port 8000..."\n\
-reflex run --env prod --backend-only --loglevel debug &\n\
-BACKEND_PID=$!\n\
-\n\
-echo "Waiting for backend to start..."\n\
+# Attendre que le backend soit prêt\n\
 for i in {1..30}; do\n\
-  if curl -s http://localhost:8000/ping > /dev/null 2>&1; then\n\
-    echo "Backend is ready!"\n\
-    break\n\
-  fi\n\
-  echo "Waiting... ($i/30)"\n\
+  curl -s http://localhost:8000/ping > /dev/null 2>&1 && break\n\
   sleep 1\n\
 done\n\
 \n\
-echo "Starting Caddy on port $PORT..."\n\
+# Démarrer Caddy\n\
 exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
