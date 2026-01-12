@@ -9,17 +9,20 @@
 #uvicorn>=0.25.0
 
 
-# Framework Reflex - version exacte qui fonctionne
+# Framework Reflex - versions exactes qui fonctionnent
 reflex==0.7.10.post1
+reflex-chakra==0.7.0
 
-# Backend / Database
+# Backend / Database - versions compatibles
 supabase>=2.0.0
 python-dotenv>=1.0.0
-pydantic>=2.0.0
-sqlmodel>=0.0.14
+pydantic==2.11.4
+pydantic_core==2.33.2
+sqlmodel==0.0.24
+SQLAlchemy==2.0.40
 
 # Authentication
 bcrypt>=4.0.0
 
-# PDF Export (si utilisé)
+# PDF Export
 reportlab>=4.0.0
