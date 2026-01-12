@@ -7,6 +7,7 @@ Application Reflex avec Supabase backend
 # TODO: clean this Mode de fonctionnement du site industriel ""3"""
 # TODO: damaged PDF file
 # TODO: 0 simulations dans la page profile
+# TODO: action rapide: consulter les fiches
 
 
 

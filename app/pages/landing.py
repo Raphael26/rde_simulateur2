@@ -1,8 +1,11 @@
 """
 Landing Page - Design moderne et épuré
 RDE Consulting - Simulateur CEE
+Adapte le contenu selon l'état de connexion de l'utilisateur
 """
 import reflex as rx
+from ..state.auth_state import AuthState
+from ..state.simulation_state import SimulationState
 from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
 
 
@@ -10,10 +13,202 @@ from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
 # HERO SECTION - Pleine page avec image de fond
 # ============================================
 
+def hero_buttons_logged_out() -> rx.Component:
+    """Boutons CTA pour utilisateur non connecté."""
+    return rx.hstack(
+        rx.link(
+            rx.button(
+                "Commencer une simulation",
+                size="4",
+                style={
+                    "background": "white",
+                    "color": Colors.PRIMARY,
+                    "font_weight": "600",
+                    "padding": "1.5rem 2rem",
+                    "border": "2px solid white",
+                    "border_radius": "12px",
+                    "cursor": "pointer",
+                    "transition": "all 0.3s ease",
+                    "_hover": {
+                        "transform": "translateY(-2px)",
+                        "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
+                    },
+                },
+            ),
+            href="/simulation/date-department",
+        ),
+        rx.link(
+            rx.button(
+                "Se connecter",
+                size="4",
+                style={
+                    "border": "2px solid rgba(255,255,255,0.9)",
+                    "color": "white",
+                    "font_weight": "600",
+                    "padding": "1.5rem 2rem",
+                    "border_radius": "12px",
+                    "background": "rgba(255,255,255,0.1)",
+                    "cursor": "pointer",
+                    "transition": "all 0.3s ease",
+                    "_hover": {
+                        "background": "rgba(255,255,255,0.2)",
+                        "border_color": "white",
+                    },
+                },
+            ),
+            href="/login",
+        ),
+        spacing="4",
+        margin_top="2.5rem",
+        flex_wrap="wrap",
+        justify="center",
+    )
+
+
+def hero_buttons_logged_in() -> rx.Component:
+    """Boutons CTA pour utilisateur connecté."""
+    return rx.hstack(
+        rx.link(
+            rx.button(
+                rx.hstack(
+                    rx.icon("layout-dashboard", size=20),
+                    rx.text("Accéder au tableau de bord"),
+                    spacing="2",
+                    align="center",
+                ),
+                size="4",
+                style={
+                    "background": "white",
+                    "color": Colors.PRIMARY,
+                    "font_weight": "600",
+                    "padding": "1.5rem 2rem",
+                    "border": "2px solid white",
+                    "border_radius": "12px",
+                    "cursor": "pointer",
+                    "transition": "all 0.3s ease",
+                    "_hover": {
+                        "transform": "translateY(-2px)",
+                        "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
+                    },
+                },
+            ),
+            href="/dashboard",
+        ),
+        rx.button(
+            rx.hstack(
+                rx.icon("plus", size=20),
+                rx.text("Nouvelle simulation"),
+                spacing="2",
+                align="center",
+            ),
+            size="4",
+            on_click=SimulationState.start_new_simulation,
+            style={
+                "border": "2px solid rgba(255,255,255,0.9)",
+                "color": "white",
+                "font_weight": "600",
+                "padding": "1.5rem 2rem",
+                "border_radius": "12px",
+                "background": "rgba(255,255,255,0.1)",
+                "cursor": "pointer",
+                "transition": "all 0.3s ease",
+                "_hover": {
+                    "background": "rgba(255,255,255,0.2)",
+                    "border_color": "white",
+                },
+            },
+        ),
+        spacing="4",
+        margin_top="2.5rem",
+        flex_wrap="wrap",
+        justify="center",
+    )
+
+
+def user_welcome_badge() -> rx.Component:
+    """Badge de bienvenue pour l'utilisateur connecté."""
+    return rx.hstack(
+        rx.box(
+            rx.text(
+                AuthState.initials,
+                font_size="0.9rem",
+                font_weight="600",
+                color=Colors.PRIMARY,
+            ),
+            width="36px",
+            height="36px",
+            display="flex",
+            align_items="center",
+            justify_content="center",
+            background="white",
+            border_radius="50%",
+            border=f"2px solid {Colors.PRIMARY}",
+        ),
+        rx.vstack(
+            rx.text(
+                "Bienvenue,",
+                font_size="0.75rem",
+                color="rgba(255,255,255,0.9)",
+                line_height="1",
+            ),
+            rx.text(
+                AuthState.display_name,
+                font_size="0.95rem",
+                font_weight="600",
+                color="white",
+                line_height="1.2",
+            ),
+            spacing="0",
+            align="start",
+        ),
+        spacing="2",
+        align="center",
+        padding="0.5rem 1rem",
+        background="rgba(0,0,0,0.4)",
+        border_radius="100px",
+        border="1px solid rgba(255,255,255,0.5)",
+        backdrop_filter="blur(10px)",
+    )
+
+
+def hero_header_logged_out() -> rx.Component:
+    """Header du hero pour utilisateur non connecté."""
+    return rx.box(
+        rx.image(
+            src="/logo_rde_transparent.jpg",
+            height="120px",
+            object_fit="contain",
+        ),
+        position="absolute",
+        top="2rem",
+        left="2rem",
+        z_index="10",
+    )
+
+
+def hero_header_logged_in() -> rx.Component:
+    """Header du hero pour utilisateur connecté."""
+    return rx.hstack(
+        rx.image(
+            src="/logo_rde_transparent.jpg",
+            height="100px",
+            object_fit="contain",
+        ),
+        rx.spacer(),
+        user_welcome_badge(),
+        position="absolute",
+        top="2rem",
+        left="2rem",
+        right="2rem",
+        z_index="10",
+        align="center",
+    )
+
+
 def hero_section() -> rx.Component:
     """Section hero avec image de fond."""
     return rx.box(
-        # Overlay semi-transparent (ajuste l'opacité ici: 0.3 = 30%, 0.5 = 50%, 0.7 = 70%)
+        # Overlay semi-transparent
         rx.box(
             position="absolute",
             top="0",
@@ -24,17 +219,11 @@ def hero_section() -> rx.Component:
             z_index="1",
         ),
         
-        # Logo en haut à gauche
-        rx.box(
-            rx.image(
-                src="/logo_rde_transparent.jpg",
-                height="120px",
-                object_fit="contain",
-            ),
-            position="absolute",
-            top="2rem",
-            left="2rem",
-            z_index="10",
+        # Header conditionnel
+        rx.cond(
+            AuthState.is_authenticated,
+            hero_header_logged_in(),
+            hero_header_logged_out(),
         ),
         
         # Contenu centré
@@ -51,65 +240,34 @@ def hero_section() -> rx.Component:
                     letter_spacing="-0.02em",
                 ),
                 
-                # Sous-titre
-                rx.text(
-                    "Estimez vos Certificats d'Économies d'Énergie en quelques clics",
-                    font_size=["1rem", "1.1rem", "1.25rem"],
-                    color="rgba(255, 255, 255, 0.95)",
-                    text_align="center",
-                    max_width="600px",
-                    line_height="1.6",
-                    margin_top="1rem",
+                # Sous-titre conditionnel
+                rx.cond(
+                    AuthState.is_authenticated,
+                    rx.text(
+                        "Ravi de vous revoir ! Accédez à vos simulations ou créez-en une nouvelle.",
+                        font_size=["1rem", "1.1rem", "1.25rem"],
+                        color="rgba(255, 255, 255, 0.95)",
+                        text_align="center",
+                        max_width="600px",
+                        line_height="1.6",
+                        margin_top="1rem",
+                    ),
+                    rx.text(
+                        "Estimez vos Certificats d'Économies d'Énergie en quelques clics",
+                        font_size=["1rem", "1.1rem", "1.25rem"],
+                        color="rgba(255, 255, 255, 0.95)",
+                        text_align="center",
+                        max_width="600px",
+                        line_height="1.6",
+                        margin_top="1rem",
+                    ),
                 ),
                 
-                # Boutons CTA
-                rx.hstack(
-                    rx.link(
-                        rx.button(
-                            "Commencer une simulation",
-                            size="4",
-                            style={
-                                "background": "white",
-                                "color": Colors.PRIMARY,
-                                "font_weight": "600",
-                                "padding": "1.5rem 2rem",
-                                "border": "2px solid white",
-                                "border_radius": "12px",
-                                "cursor": "pointer",
-                                "transition": "all 0.3s ease",
-                                "_hover": {
-                                    "transform": "translateY(-2px)",
-                                    "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
-                                },
-                            },
-                        ),
-                        href="/simulation/date-department",
-                    ),
-                    rx.link(
-                        rx.button(
-                            "Se connecter",
-                            size="4",
-                            style={
-                                "border": "2px solid rgba(255,255,255,0.9)",
-                                "color": "white",
-                                "font_weight": "600",
-                                "padding": "1.5rem 2rem",
-                                "border_radius": "12px",
-                                "background": "rgba(255,255,255,0.1)",
-                                "cursor": "pointer",
-                                "transition": "all 0.3s ease",
-                                "_hover": {
-                                    "background": "rgba(255,255,255,0.2)",
-                                    "border_color": "white",
-                                },
-                            },
-                        ),
-                        href="/login",
-                    ),
-                    spacing="4",
-                    margin_top="2.5rem",
-                    flex_wrap="wrap",
-                    justify="center",
+                # Boutons CTA conditionnels
+                rx.cond(
+                    AuthState.is_authenticated,
+                    hero_buttons_logged_in(),
+                    hero_buttons_logged_out(),
                 ),
                 
                 spacing="2",
@@ -404,7 +562,7 @@ def step_connector() -> rx.Component:
     """Connecteur entre les étapes."""
     return rx.box(
         rx.icon("chevron-right", size=24, color=Colors.GRAY_300),
-        display="flex",
+        display=["none", "none", "flex", "flex"],
         align_items="center",
         padding_x="1rem",
     )
@@ -450,6 +608,7 @@ def how_it_works_section() -> rx.Component:
                 align="center",
                 margin_top="3rem",
                 width="100%",
+                flex_wrap="wrap",
             ),
             spacing="4",
             align="center",
@@ -469,46 +628,123 @@ def how_it_works_section() -> rx.Component:
 # ============================================
 
 def cta_section() -> rx.Component:
-    """Section appel à l'action."""
+    """Section appel à l'action - adapté selon connexion."""
     return rx.box(
         rx.vstack(
-            rx.text(
-                "Prêt à calculer vos primes ?",
-                font_size=["1.75rem", "2rem", "2.5rem"],
-                font_weight="700",
-                color="white",
-                text_align="center",
-            ),
-            rx.text(
-                "Commencez gratuitement dès maintenant",
-                font_size="1.1rem",
-                color="rgba(255,255,255,0.85)",
-                text_align="center",
-            ),
-            rx.link(
-                rx.button(
-                    rx.hstack(
-                        rx.text("Démarrer une simulation"),
-                        rx.icon("arrow-right", size=20),
-                        spacing="2",
-                        align="center",
-                    ),
-                    size="4",
-                    style={
-                        "background": "white",
-                        "color": Colors.PRIMARY,
-                        "font_weight": "600",
-                        "padding": "1.5rem 2.5rem",
-                        "border_radius": "12px",
-                        "cursor": "pointer",
-                        "transition": "all 0.3s ease",
-                        "_hover": {
-                            "transform": "translateY(-2px)",
-                            "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
-                        },
-                    },
+            rx.cond(
+                AuthState.is_authenticated,
+                rx.text(
+                    "Lancez une nouvelle simulation",
+                    font_size=["1.75rem", "2rem", "2.5rem"],
+                    font_weight="700",
+                    color="white",
+                    text_align="center",
                 ),
-                href="/simulation/date-department",
+                rx.text(
+                    "Prêt à calculer vos primes ?",
+                    font_size=["1.75rem", "2rem", "2.5rem"],
+                    font_weight="700",
+                    color="white",
+                    text_align="center",
+                ),
+            ),
+            rx.cond(
+                AuthState.is_authenticated,
+                rx.text(
+                    "Vos simulations sont sauvegardées automatiquement",
+                    font_size="1.1rem",
+                    color="rgba(255,255,255,0.85)",
+                    text_align="center",
+                ),
+                rx.text(
+                    "Commencez gratuitement dès maintenant",
+                    font_size="1.1rem",
+                    color="rgba(255,255,255,0.85)",
+                    text_align="center",
+                ),
+            ),
+            rx.cond(
+                AuthState.is_authenticated,
+                # Utilisateur connecté
+                rx.hstack(
+                    rx.button(
+                        rx.hstack(
+                            rx.icon("plus", size=20),
+                            rx.text("Nouvelle simulation"),
+                            spacing="2",
+                            align="center",
+                        ),
+                        size="4",
+                        on_click=SimulationState.start_new_simulation,
+                        style={
+                            "background": "white",
+                            "color": Colors.PRIMARY,
+                            "font_weight": "600",
+                            "padding": "1.5rem 2.5rem",
+                            "border_radius": "12px",
+                            "cursor": "pointer",
+                            "transition": "all 0.3s ease",
+                            "_hover": {
+                                "transform": "translateY(-2px)",
+                                "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
+                            },
+                        },
+                    ),
+                    rx.link(
+                        rx.button(
+                            rx.hstack(
+                                rx.icon("file-search", size=20),
+                                rx.text("Consulter les fiches"),
+                                spacing="2",
+                                align="center",
+                            ),
+                            size="4",
+                            style={
+                                "border": "2px solid rgba(255,255,255,0.9)",
+                                "color": "white",
+                                "font_weight": "600",
+                                "padding": "1.5rem 2rem",
+                                "border_radius": "12px",
+                                "background": "rgba(255,255,255,0.1)",
+                                "cursor": "pointer",
+                                "transition": "all 0.3s ease",
+                                "_hover": {
+                                    "background": "rgba(255,255,255,0.2)",
+                                },
+                            },
+                        ),
+                        href="/fiches",
+                    ),
+                    spacing="4",
+                    flex_wrap="wrap",
+                    justify="center",
+                ),
+                # Utilisateur non connecté
+                rx.link(
+                    rx.button(
+                        rx.hstack(
+                            rx.text("Démarrer une simulation"),
+                            rx.icon("arrow-right", size=20),
+                            spacing="2",
+                            align="center",
+                        ),
+                        size="4",
+                        style={
+                            "background": "white",
+                            "color": Colors.PRIMARY,
+                            "font_weight": "600",
+                            "padding": "1.5rem 2.5rem",
+                            "border_radius": "12px",
+                            "cursor": "pointer",
+                            "transition": "all 0.3s ease",
+                            "_hover": {
+                                "transform": "translateY(-2px)",
+                                "box_shadow": "0 10px 40px rgba(0,0,0,0.2)",
+                            },
+                        },
+                    ),
+                    href="/simulation/date-department",
+                ),
             ),
             spacing="4",
             align="center",
@@ -672,7 +908,7 @@ def contact_modal() -> rx.Component:
 # ============================================
 
 def footer_section() -> rx.Component:
-    """Footer moderne."""
+    """Footer moderne - adapté selon connexion."""
     return rx.box(
         rx.hstack(
             rx.image(
@@ -682,6 +918,24 @@ def footer_section() -> rx.Component:
             ),
             rx.spacer(),
             rx.hstack(
+                # Lien conditionnel Dashboard/Connexion
+                rx.cond(
+                    AuthState.is_authenticated,
+                    rx.link(
+                        "Mon tableau de bord",
+                        href="/dashboard",
+                        color=Colors.GRAY_500,
+                        font_size="0.85rem",
+                        _hover={"color": Colors.PRIMARY},
+                    ),
+                    rx.link(
+                        "Connexion",
+                        href="/login",
+                        color=Colors.GRAY_500,
+                        font_size="0.85rem",
+                        _hover={"color": Colors.PRIMARY},
+                    ),
+                ),
                 rx.link(
                     "Mentions légales",
                     href="/mentions-legales",

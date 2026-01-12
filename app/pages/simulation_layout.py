@@ -141,7 +141,8 @@
 #    """Séparateur entre items de récap."""
 #    return rx.box(width="1px", height="16px", background=Colors.GRAY_300)
 
-"""Layout commun pour les pages de simulation"""
+
+#"""Layout commun pour les pages de simulation"""
 #import reflex as rx
 #from ..styles.design_system import Colors, Typography, Spacing, Borders
 #
