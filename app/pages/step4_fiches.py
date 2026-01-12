@@ -310,7 +310,7 @@
 #    )
 #
 #
-#@rx.page(route="/simulation/fiches", title="Fiche CEE - SimuPrime", on_load=SimulationState.load_fiches)
+#@rx.page(route="/simulation/fiches", title="Fiche CEE - RDE Consulting", on_load=SimulationState.load_fiches)
 #def step4_fiches_page() -> rx.Component:
 #    return fiches_content()
 
@@ -525,7 +525,7 @@ def step4_content() -> rx.Component:
     )
 
 
-@rx.page(route="/simulation/fiches", title="Fiche CEE - SimuPrime", on_load=SimulationState.load_fiches)
+@rx.page(route="/simulation/fiches", title="Fiche CEE - RDE Consulting", on_load=SimulationState.load_fiches)
 def step4_fiches_page() -> rx.Component:
     return simulation_layout(
         title="Sélection de la Fiche CEE",

@@ -270,7 +270,7 @@
 #    )
 #
 #
-#@rx.page(route="/simulation/typology", title="Typologie - SimuPrime")
+#@rx.page(route="/simulation/typology", title="Typologie - RDE Consulting")
 #def typology_page() -> rx.Component:
 #    return typology_content()
 
@@ -414,7 +414,7 @@ def step3_content() -> rx.Component:
     )
 
 
-@rx.page(route="/simulation/typology", title="Typologie - SimuPrime")
+@rx.page(route="/simulation/typology", title="Typologie - RDE Consulting")
 def typology_page() -> rx.Component:
     return simulation_layout(
         title="Sélection de la Typologie",

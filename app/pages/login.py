@@ -14,25 +14,26 @@ def login_card() -> rx.Component:
         rx.vstack(
             # Logo et titre
             rx.vstack(
-                rx.hstack(
-                    rx.icon("zap", size=32, color=Colors.PRIMARY),
-                    rx.text(
-                        "SimuPrime",
-                        font_size="1.75rem",
-                        font_weight="700",
-                        color=Colors.PRIMARY,
+                rx.box(
+                    rx.image(
+                        src="/logo_rde.jpg",
+                        height="100px",
+                        object_fit="contain",
                     ),
-                    spacing="2",
-                    align="center",
+                    width="100%",
+                    display="flex",
+                    justify_content="center",
                 ),
                 rx.text(
                     "Connexion à votre compte",
                     font_size=Typography.SIZE_LG,
                     color=Colors.GRAY_600,
                     font_weight="500",
+                    text_align="center",
                 ),
-                spacing="2",
+                spacing="3",
                 align="center",
+                width="100%",
                 margin_bottom="2rem",
             ),
             
@@ -111,6 +112,7 @@ def login_card() -> rx.Component:
                                     _focus={"outline": "none"},
                                 ),
                                 spacing="3",
+                                align="center",
                                 width="100%",
                                 padding="0.75rem 1rem",
                             ),
@@ -146,6 +148,7 @@ def login_card() -> rx.Component:
                                 _hover={"text_decoration": "underline"},
                             ),
                             width="100%",
+                            align="center",
                         ),
                         rx.box(
                             rx.hstack(
@@ -175,6 +178,7 @@ def login_card() -> rx.Component:
                                     color=Colors.GRAY_400,
                                 ),
                                 spacing="3",
+                                align="center",
                                 width="100%",
                                 padding="0.75rem 1rem",
                             ),
@@ -200,11 +204,13 @@ def login_card() -> rx.Component:
                                 rx.spinner(size="1"),
                                 rx.text("Connexion en cours..."),
                                 spacing="2",
+                                align="center",
                             ),
                             rx.hstack(
                                 rx.text("Se connecter"),
                                 rx.icon("arrow-right", size=18),
                                 spacing="2",
+                                align="center",
                             ),
                         ),
                         type="submit",
@@ -266,6 +272,7 @@ def login_card() -> rx.Component:
                         rx.text("Créer un compte"),
                         rx.icon("user-plus", size=16),
                         spacing="1",
+                        align="center",
                     ),
                     href="/register",
                     font_size=Typography.SIZE_SM,
@@ -274,6 +281,7 @@ def login_card() -> rx.Component:
                     _hover={"text_decoration": "underline"},
                 ),
                 spacing="2",
+                align="center",
                 justify="center",
                 width="100%",
             ),
@@ -305,6 +313,7 @@ def login_page_content() -> rx.Component:
                     rx.icon("arrow-left", size=16),
                     rx.text("Retour à l'accueil"),
                     spacing="2",
+                    align="center",
                     color=Colors.GRAY_500,
                     _hover={"color": Colors.PRIMARY},
                 ),
@@ -338,7 +347,7 @@ def login_page_content() -> rx.Component:
 
 @rx.page(
     route="/login",
-    title="Connexion - SimuPrime",
+    title="Connexion - RDE Consulting",
     on_load=AuthState.redirect_if_authenticated,
 )
 def login_page() -> rx.Component:

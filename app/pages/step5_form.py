@@ -466,7 +466,7 @@ def step5_content() -> rx.Component:
     )
 
 
-@rx.page(route="/simulation/form", title="Formulaire - SimuPrime")
+@rx.page(route="/simulation/form", title="Formulaire - RDE Consulting")
 def step5_form_page() -> rx.Component:
     return rx.hstack(
         # Sidebar

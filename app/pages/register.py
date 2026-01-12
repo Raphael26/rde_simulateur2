@@ -93,7 +93,7 @@ def register_card() -> rx.Component:
                 rx.hstack(
                     rx.icon("zap", size=32, color=Colors.PRIMARY),
                     rx.text(
-                        "SimuPrime",
+                        "RDE Consulting",
                         font_size="1.75rem",
                         font_weight="700",
                         color=Colors.PRIMARY,
@@ -108,7 +108,7 @@ def register_card() -> rx.Component:
                     font_weight="500",
                 ),
                 rx.text(
-                    "Rejoignez SimuPrime pour calculer vos primes CEE",
+                    "Rejoignez RDE Consulting pour calculer vos primes CEE",
                     font_size=Typography.SIZE_SM,
                     color=Colors.GRAY_400,
                     text_align="center",
@@ -534,7 +534,7 @@ def register_page_content() -> rx.Component:
 
 @rx.page(
     route="/register",
-    title="Inscription - SimuPrime",
+    title="Inscription - RDE Consulting",
     on_load=AuthState.redirect_if_authenticated,
 )
 def register_page() -> rx.Component:

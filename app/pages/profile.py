@@ -5,6 +5,7 @@ Design moderne avec sections pour les informations, modifications et sécurité
 
 import reflex as rx
 from ..state.auth_state import AuthState
+from ..state.user_state import UserState
 from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
 from ..components.sidebar import sidebar
 
@@ -970,8 +971,8 @@ def profile_content() -> rx.Component:
 
 @rx.page(
     route="/profile",
-    title="Mon Profil - SimuPrime",
-    on_load=AuthState.require_auth,
+    title="Mon Profil - RDE Consulting",
+    on_load=[AuthState.require_auth, UserState.load_simulations],
 )
 def profile_page() -> rx.Component:
     """Page de profil utilisateur."""

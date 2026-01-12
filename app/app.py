@@ -1,7 +1,15 @@
 """
-SimuPrime - Simulateur de Primes CEE
+RDE Consulting - Simulateur de Primes CEE
 Application Reflex avec Supabase backend
 """
+
+# TODO: donner des noms de variables plus digestibles que 1x8h, 2x8h etc
+# TODO: clean this Mode de fonctionnement du site industriel ""3"""
+# TODO: damaged PDF file
+# TODO: 0 simulations dans la page profile
+
+
+
 import reflex as rx
 
 # Import des états
@@ -22,6 +30,8 @@ from .pages import (
     step6_result_page,
 )
 
+from .pages.mentions_legales import mentions_legales_page
+
 # Import des styles
 from .styles.design_system import Colors
 
@@ -37,7 +47,7 @@ def get_theme() -> dict:
 
 
 # Page d'accueil (redirection)
-@rx.page(route="/", title="SimuPrime - Accueil")
+@rx.page(route="/", title="RDE Consulting - Accueil")
 def index() -> rx.Component:
     return landing_page()
 

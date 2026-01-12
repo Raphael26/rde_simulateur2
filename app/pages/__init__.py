@@ -1,4 +1,4 @@
-"""Pages de l'application SimuPrime"""
+"""Pages de l'application RDE Consulting"""
 #from .landing import landing_page
 #from .login import login_page
 #from .register import register_page
@@ -12,7 +12,7 @@
 #from .step6_result import step6_result_page
 
 
-"""Pages de l'application SimuPrime"""
+"""Pages de l'application RDE Consulting"""
 from .landing import landing_page
 from .login import login_page
 from .register import register_page

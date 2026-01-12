@@ -208,7 +208,7 @@
 #    )
 #
 #
-#@rx.page(route="/simulation/sector", title="Secteur - SimuPrime")
+#@rx.page(route="/simulation/sector", title="Secteur - RDE Consulting")
 #def sector_page() -> rx.Component:
 #    return sector_content()
 
@@ -337,7 +337,7 @@ def step2_content() -> rx.Component:
     )
 
 
-@rx.page(route="/simulation/sector", title="Secteur - SimuPrime")
+@rx.page(route="/simulation/sector", title="Secteur - RDE Consulting")
 def sector_page() -> rx.Component:
     return simulation_layout(
         title="Sélection du Secteur",

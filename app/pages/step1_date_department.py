@@ -255,7 +255,7 @@
 #    )
 #
 #
-#@rx.page(route="/simulation/date-department", title="Date et Département - SimuPrime")
+#@rx.page(route="/simulation/date-department", title="Date et Département - RDE Consulting")
 #def date_department_page() -> rx.Component:
 #    return date_department_content()
 
@@ -450,7 +450,7 @@ def step1_content() -> rx.Component:
     )
 
 
-@rx.page(route="/simulation/date-department", title="Date et Département - SimuPrime")
+@rx.page(route="/simulation/date-department", title="Date et Département - RDE Consulting")
 def date_department_page() -> rx.Component:
     return simulation_layout(
         title="Nouvelle Simulation",

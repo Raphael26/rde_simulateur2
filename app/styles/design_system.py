@@ -1,5 +1,5 @@
 """
-Design System - SimuPrime
+Design System - RDE Consulting
 """
 
 # =============================================================================

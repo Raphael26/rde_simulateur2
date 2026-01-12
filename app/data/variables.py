@@ -1,5 +1,5 @@
 """
-Variables et données statiques pour l'application SimuPrime
+Variables et données statiques pour l'application RDE Consulting
 """
 
 # =============================================================================
@@ -472,11 +472,6 @@ def get_abbreviation(sector: str, typology: str) -> str:
     return ""
 
 
-def get_zone_climatique(department: str) -> str:
-    """Retourne la zone climatique pour un département donné."""
-    return DEPARTEMENTS_FRANCE.get(department, "-")
-
-
 def get_fiches_for_prefix(prefix: str) -> list:
     """
     Retourne la liste des fiches pour un préfixe donné.
@@ -498,3 +493,114 @@ def get_fiches_for_prefix(prefix: str) -> list:
     # Trier par code
     fiches.sort(key=lambda x: x["code"])
     return fiches
+
+
+# Mapping département -> zone climatique (H1, H2, H3)
+ZONES_CLIMATIQUES = {
+    "Ain (01)": "H1",
+    "Aisne (02)": "H1",
+    "Allier (03)": "H1",
+    "Alpes-de-Haute-Provence (04)": "H2",
+    "Hautes-Alpes (05)": "H1",
+    "Alpes-Maritimes (06)": "H3",
+    "Ardèche (07)": "H2",
+    "Ardennes (08)": "H1",
+    "Ariège (09)": "H2",
+    "Aube (10)": "H1",
+    "Aude (11)": "H3",
+    "Aveyron (12)": "H2",
+    "Bouches-du-Rhône (13)": "H3",
+    "Calvados (14)": "H2",
+    "Cantal (15)": "H1",
+    "Charente (16)": "H2",
+    "Charente-Maritime (17)": "H2",
+    "Cher (18)": "H2",
+    "Corrèze (19)": "H1",
+    "Corse-du-Sud (2A)": "H3",
+    "Haute-Corse (2B)": "H3",
+    "Côte-d'Or (21)": "H1",
+    "Côtes-d'Armor (22)": "H2",
+    "Creuse (23)": "H1",
+    "Dordogne (24)": "H2",
+    "Doubs (25)": "H1",
+    "Drôme (26)": "H2",
+    "Eure (27)": "H1",
+    "Eure-et-Loir (28)": "H1",
+    "Finistère (29)": "H2",
+    "Gard (30)": "H3",
+    "Haute-Garonne (31)": "H2",
+    "Gers (32)": "H2",
+    "Gironde (33)": "H2",
+    "Hérault (34)": "H3",
+    "Ille-et-Vilaine (35)": "H2",
+    "Indre (36)": "H2",
+    "Indre-et-Loire (37)": "H2",
+    "Isère (38)": "H1",
+    "Jura (39)": "H1",
+    "Landes (40)": "H2",
+    "Loir-et-Cher (41)": "H2",
+    "Loire (42)": "H1",
+    "Haute-Loire (43)": "H1",
+    "Loire-Atlantique (44)": "H2",
+    "Loiret (45)": "H1",
+    "Lot (46)": "H2",
+    "Lot-et-Garonne (47)": "H2",
+    "Lozère (48)": "H2",
+    "Maine-et-Loire (49)": "H2",
+    "Manche (50)": "H2",
+    "Marne (51)": "H1",
+    "Haute-Marne (52)": "H1",
+    "Mayenne (53)": "H2",
+    "Meurthe-et-Moselle (54)": "H1",
+    "Meuse (55)": "H1",
+    "Morbihan (56)": "H2",
+    "Moselle (57)": "H1",
+    "Nièvre (58)": "H1",
+    "Nord (59)": "H1",
+    "Oise (60)": "H1",
+    "Orne (61)": "H2",
+    "Pas-de-Calais (62)": "H1",
+    "Puy-de-Dôme (63)": "H1",
+    "Pyrénées-Atlantiques (64)": "H2",
+    "Hautes-Pyrénées (65)": "H2",
+    "Pyrénées-Orientales (66)": "H3",
+    "Bas-Rhin (67)": "H1",
+    "Haut-Rhin (68)": "H1",
+    "Rhône (69)": "H1",
+    "Haute-Saône (70)": "H1",
+    "Saône-et-Loire (71)": "H1",
+    "Sarthe (72)": "H2",
+    "Savoie (73)": "H1",
+    "Haute-Savoie (74)": "H1",
+    "Paris (75)": "H1",
+    "Seine-Maritime (76)": "H1",
+    "Seine-et-Marne (77)": "H1",
+    "Yvelines (78)": "H1",
+    "Deux-Sèvres (79)": "H2",
+    "Somme (80)": "H1",
+    "Tarn (81)": "H2",
+    "Tarn-et-Garonne (82)": "H2",
+    "Var (83)": "H3",
+    "Vaucluse (84)": "H2",
+    "Vendée (85)": "H2",
+    "Vienne (86)": "H2",
+    "Haute-Vienne (87)": "H1",
+    "Vosges (88)": "H1",
+    "Yonne (89)": "H1",
+    "Territoire de Belfort (90)": "H1",
+    "Essonne (91)": "H1",
+    "Hauts-de-Seine (92)": "H1",
+    "Seine-Saint-Denis (93)": "H1",
+    "Val-de-Marne (94)": "H1",
+    "Val-d'Oise (95)": "H1",
+    "Guadeloupe (971)": "H3",
+    "Martinique (972)": "H3",
+    "Guyane (973)": "H3",
+    "La Réunion (974)": "H3",
+    "Mayotte (976)": "H3",
+}
+
+
+def get_zone_climatique(department: str) -> str:
+    """Retourne la zone climatique (H1, H2 ou H3) pour un département donné."""
+    return ZONES_CLIMATIQUES.get(department, "H1")
