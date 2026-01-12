@@ -1,22 +1,28 @@
 :{$PORT} {
-    # Logs
     log {
         output stdout
+        level DEBUG
     }
 
-    # Backend Reflex - WebSocket et API
-    @backend path /_event* /ping /_upload*
-    reverse_proxy @backend 127.0.0.1:8000 {
-        # Support WebSocket
-        header_up Connection {http.request.header.Connection}
-        header_up Upgrade {http.request.header.Upgrade}
+    # Tout ce qui commence par /_event va au backend
+    handle /_event* {
+        reverse_proxy 127.0.0.1:8000
     }
 
-    # Frontend statique - CHEMIN CORRIGÉ
-    root * /app/.web/build/client
-    try_files {path} {path}/ /index.html
-    file_server
+    # /ping va au backend
+    handle /ping {
+        reverse_proxy 127.0.0.1:8000
+    }
 
-    # Compression
-    encode gzip
+    # /_upload va au backend  
+    handle /_upload* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    # Tout le reste = fichiers statiques
+    handle {
+        root * /app/.web/build/client
+        try_files {path} /index.html
+        file_server
+    }
 }
