@@ -1,17 +1,23 @@
+# Configuration Nixpacks pour Railway
 [phases.setup]
-nixPkgs = ["nodejs_20", "python311", "unzip"]
+nixPkgs = ["python311", "nodejs_20"]
 
 [phases.install]
+dependsOn = ["setup"]
 cmds = [
-    "pip install --upgrade pip",
-    "pip install -r requirements.txt"
+    "python -m pip install --upgrade pip",
+    "python -m pip install -r requirements.txt"
 ]
 
 [phases.build]
+dependsOn = ["install"]
 cmds = [
-    "reflex init",
-    "reflex export --frontend-only --no-zip"
+    "python -m reflex init",
+    "python -m reflex export --frontend-only --no-zip"
 ]
 
 [start]
-cmd = "reflex run --env prod --backend-only --backend-host 0.0.0.0 --backend-port $PORT"
+cmd = "python -m reflex run --env prod --backend-only --backend-host 0.0.0.0 --backend-port ${PORT:-8080}"
+
+[variables]
+PYTHON_VERSION = "3.11"
