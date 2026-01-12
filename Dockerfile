@@ -36,6 +36,9 @@ COPY . .
 # Rendre le script exécutable
 RUN chmod +x start.sh
 
+# Définir le domaine pour le build du frontend
+ENV RAILWAY_PUBLIC_DOMAIN=rdesimulateur2-production.up.railway.app
+
 # Initialiser et exporter le frontend Reflex
 RUN reflex init && reflex export --frontend-only --no-zip
 

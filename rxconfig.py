@@ -18,9 +18,8 @@
 import reflex as rx
 import os
 
-# Détection de l'environnement
-RAILWAY_ENVIRONMENT = os.getenv("RAILWAY_ENVIRONMENT")
-IS_PRODUCTION = RAILWAY_ENVIRONMENT is not None
+# Détecter si on est en production (Railway définit cette variable)
+IS_PRODUCTION = os.getenv("RAILWAY_ENVIRONMENT") is not None or os.getenv("RAILWAY_PUBLIC_DOMAIN") is not None
 
 # Configuration de base
 base_config = {
@@ -37,15 +36,8 @@ base_config = {
 
 # En production, configurer l'API URL
 if IS_PRODUCTION:
-    # Récupérer le domaine Railway
-    RAILWAY_PUBLIC_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
-    RAILWAY_STATIC_URL = os.getenv("RAILWAY_STATIC_URL", "")
-    
-    if RAILWAY_PUBLIC_DOMAIN:
-        # Frontend et backend sur le même domaine (via Caddy)
-        base_config["api_url"] = f"https://{RAILWAY_PUBLIC_DOMAIN}"
-    elif RAILWAY_STATIC_URL:
-        base_config["api_url"] = RAILWAY_STATIC_URL
-    # Si aucun domaine n'est défini, Reflex utilisera des chemins relatifs
+    # Domaine Railway (hardcodé pour le build)
+    PROD_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "rdesimulateur2-production.up.railway.app")
+    base_config["api_url"] = f"https://{PROD_DOMAIN}"
 
 config = rx.Config(**base_config)
