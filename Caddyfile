@@ -1,6 +1,10 @@
 :8080 {
+    log {
+        output stdout
+        level DEBUG
+    }
+
     # API and WebSocket routes to backend
-    # Match all variations of /_event path
     @eventPath {
         path /_event
         path /_event/
@@ -25,7 +29,7 @@
     
     # Static files
     handle {
-        root * /app/.web/_static
+        root * /app/.web/build/client
         try_files {path} {path}/ /index.html
         file_server
     }
