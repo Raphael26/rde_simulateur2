@@ -27,6 +27,7 @@ if public_domain:
         app_name="app",
         title="RDE Simulateur CEE",
         description="Calculez votre prime CEE facilement",
+        show_built_with_reflex=False,
         api_url=f"https://{public_domain}",
         theme=rx.theme(
             appearance="light",
@@ -40,6 +41,7 @@ else:
         app_name="app",
         title="RDE Simulateur CEE",
         description="Calculez votre prime CEE facilement",
+        show_built_with_reflex=False,
         theme=rx.theme(
             appearance="light",
             has_background=True,
