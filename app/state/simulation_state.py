@@ -3,16 +3,13 @@
 """
 
 import reflex as rx
-from typing import Optional, Dict, List, Any, Union
-from datetime import date, datetime
+from typing import Optional, Dict, List, Any
 import json
 
 from ..data.variables import (
     DEPARTEMENTS_FRANCE,
-    SECTORS,
     SECTOR_TYPOLOGIES,
     SECTOR_ABBREVIATIONS,
-    TYPOLOGY_ABBREVIATIONS,
     BENEFICIARY_TYPES,
     get_zone_climatique,
     get_fiches_for_prefix,

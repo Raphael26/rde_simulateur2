@@ -3,8 +3,6 @@ Authentication State - Gestion complète de l'authentification avec Supabase
 """
 
 import reflex as rx
-from typing import Optional, Dict, Any
-from datetime import datetime
 import re
 
 

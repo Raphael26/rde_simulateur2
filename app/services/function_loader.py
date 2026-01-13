@@ -6,7 +6,7 @@ Utilisé pour les calculs CEE basés sur les fichiers de configuration des fiche
 import inspect
 import ast
 import types
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class FunctionLoader:
