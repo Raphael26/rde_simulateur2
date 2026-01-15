@@ -10,8 +10,8 @@ from ..styles.design_system import Colors, Typography, Spacing, Borders, Shadows
 from ..components.sidebar import sidebar
 
 
-class ProfileState(AuthState):
-    """État étendu pour la gestion du profil."""
+class ProfileState(UserState):
+    """État étendu pour la gestion du profil - hérite de UserState pour accéder aux simulations."""
     
     # Mode édition
     is_editing: bool = False
@@ -43,12 +43,32 @@ class ProfileState(AuthState):
         """Date d'inscription formatée."""
         # Pour l'instant, retourne une valeur par défaut
         # À améliorer avec la vraie date depuis Supabase
-        return "Janvier 2026"
+        return "Janvier 2025"
     
     @rx.var
     def simulations_count(self) -> str:
-        """Nombre de simulations."""
-        return "0"
+        """Nombre de simulations - utilise total_simulations de UserState."""
+        return str(self.total_simulations)
+    
+    @rx.var
+    def has_profile_error(self) -> bool:
+        """Vérifie si un message d'erreur profil est présent."""
+        return len(self.profile_error) > 0
+    
+    @rx.var
+    def has_profile_success(self) -> bool:
+        """Vérifie si un message de succès profil est présent."""
+        return len(self.profile_success) > 0
+    
+    @rx.var
+    def has_password_error(self) -> bool:
+        """Vérifie si un message d'erreur mot de passe est présent."""
+        return len(self.password_error) > 0
+    
+    @rx.var
+    def has_password_success(self) -> bool:
+        """Vérifie si un message de succès mot de passe est présent."""
+        return len(self.password_success) > 0
     
     # ==================== Event Handlers ====================
     
@@ -114,6 +134,7 @@ class ProfileState(AuthState):
         # Validation
         if not self.edit_full_name or len(self.edit_full_name.strip()) < 2:
             self.profile_error = "Le nom doit contenir au moins 2 caractères"
+            yield rx.toast.error("Le nom doit contenir au moins 2 caractères")
             return
         
         self.is_saving_profile = True
@@ -139,6 +160,7 @@ class ProfileState(AuthState):
                     yield rx.toast.success("Profil mis à jour !")
                 else:
                     self.profile_error = "Erreur lors de la mise à jour"
+                    yield rx.toast.error("Erreur lors de la mise à jour")
             else:
                 # Mode démo sans Supabase
                 self.user_full_name = self.edit_full_name.strip()
@@ -148,6 +170,7 @@ class ProfileState(AuthState):
                 
         except Exception as e:
             self.profile_error = f"Erreur: {str(e)[:50]}"
+            yield rx.toast.error("Erreur lors de la mise à jour")
             print(f"❌ Erreur mise à jour profil: {e}")
         
         self.is_saving_profile = False
@@ -161,22 +184,27 @@ class ProfileState(AuthState):
         # Validations
         if not self.profile_current_password:
             self.password_error = "Veuillez entrer votre mot de passe actuel"
+            yield rx.toast.error("Mot de passe actuel requis")
             return
         
         if not self.profile_new_password:
             self.password_error = "Veuillez entrer un nouveau mot de passe"
+            yield rx.toast.error("Nouveau mot de passe requis")
             return
         
         if len(self.profile_new_password) < 8:
             self.password_error = "Le nouveau mot de passe doit contenir au moins 8 caractères"
+            yield rx.toast.error("Mot de passe trop court (min. 8 caractères)")
             return
         
         if self.profile_new_password != self.profile_confirm_password:
             self.password_error = "Les mots de passe ne correspondent pas"
+            yield rx.toast.error("Les mots de passe ne correspondent pas")
             return
         
         if self.profile_current_password == self.profile_new_password:
             self.password_error = "Le nouveau mot de passe doit être différent de l'ancien"
+            yield rx.toast.error("Le nouveau mot de passe doit être différent")
             return
         
         self.is_changing_password = True
@@ -199,8 +227,10 @@ class ProfileState(AuthState):
                     yield rx.toast.success("Mot de passe modifié !")
                 else:
                     self.password_error = "Erreur lors du changement de mot de passe"
+                    yield rx.toast.error("Erreur lors du changement")
             else:
                 self.password_error = "Service d'authentification non disponible"
+                yield rx.toast.error("Service non disponible")
                 
         except Exception as e:
             error_str = str(e)
@@ -208,6 +238,7 @@ class ProfileState(AuthState):
                 self.password_error = "Le nouveau mot de passe doit être différent"
             else:
                 self.password_error = "Erreur lors du changement de mot de passe"
+            yield rx.toast.error("Erreur lors du changement")
             print(f"❌ Erreur changement mot de passe: {e}")
         
         self.is_changing_password = False
@@ -247,6 +278,7 @@ def profile_header() -> rx.Component:
                     font_weight="700",
                     color=Colors.GRAY_900,
                 ),
+                # Email avec alignement corrigé
                 rx.hstack(
                     rx.icon("mail", size=16, color=Colors.GRAY_400),
                     rx.text(
@@ -255,8 +287,11 @@ def profile_header() -> rx.Component:
                         color=Colors.GRAY_500,
                     ),
                     spacing="2",
+                    align="center",  # ← Alignement ajouté
                 ),
+                # Badges
                 rx.hstack(
+                    # Badge membre depuis
                     rx.box(
                         rx.hstack(
                             rx.icon("calendar", size=14, color=Colors.PRIMARY),
@@ -264,21 +299,29 @@ def profile_header() -> rx.Component:
                                 f"Membre depuis {ProfileState.member_since}",
                                 font_size=Typography.SIZE_SM,
                             ),
-                            spacing="1",
+                            spacing="2",
+                            align="center",  # ← Alignement ajouté
                         ),
                         padding="0.25rem 0.75rem",
                         background=Colors.PRIMARY_LIGHTER,
                         border_radius=Borders.RADIUS_FULL,
                         color=Colors.PRIMARY,
                     ),
+                    # Badge simulations avec le vrai nombre
                     rx.box(
                         rx.hstack(
                             rx.icon("file-text", size=14, color=Colors.INFO),
                             rx.text(
-                                f"{ProfileState.simulations_count} simulations",
+                                ProfileState.simulations_count,
+                                font_size=Typography.SIZE_SM,
+                                font_weight="600",
+                            ),
+                            rx.text(
+                                " simulation(s)",
                                 font_size=Typography.SIZE_SM,
                             ),
                             spacing="1",
+                            align="center",  # ← Alignement ajouté
                         ),
                         padding="0.25rem 0.75rem",
                         background=f"{Colors.INFO}15",
@@ -287,6 +330,7 @@ def profile_header() -> rx.Component:
                     ),
                     spacing="2",
                     margin_top="0.5rem",
+                    align="center",  # ← Alignement ajouté
                 ),
                 spacing="1",
                 align_items="start",
@@ -352,10 +396,14 @@ def section_card(title: str, icon: str, children: rx.Component, action: rx.Compo
 
 
 def info_row(label: str, value: rx.Var, icon: str = None) -> rx.Component:
-    """Ligne d'information."""
+    """Ligne d'information avec alignement corrigé."""
     return rx.hstack(
         rx.hstack(
-            rx.icon(icon, size=16, color=Colors.GRAY_400) if icon else rx.box(),
+            rx.cond(
+                icon is not None,
+                rx.icon(icon, size=16, color=Colors.GRAY_400),
+                rx.box(width="16px"),  # Placeholder pour maintenir l'alignement
+            ) if icon else rx.box(width="0px"),
             rx.text(
                 label,
                 font_size=Typography.SIZE_SM,
@@ -363,6 +411,7 @@ def info_row(label: str, value: rx.Var, icon: str = None) -> rx.Component:
                 min_width="120px",
             ),
             spacing="2",
+            align="center",  # ← Alignement ajouté
         ),
         rx.text(
             value,
@@ -374,6 +423,7 @@ def info_row(label: str, value: rx.Var, icon: str = None) -> rx.Component:
         width="100%",
         padding_y="0.75rem",
         border_bottom=f"1px solid {Colors.GRAY_100}",
+        align="center",  # ← Alignement ajouté au conteneur principal
     )
 
 
@@ -385,7 +435,7 @@ def form_field(
     icon: str = None,
     field_type: str = "text",
 ) -> rx.Component:
-    """Champ de formulaire stylisé."""
+    """Champ de formulaire stylisé avec alignement corrigé."""
     return rx.vstack(
         rx.text(
             label,
@@ -411,6 +461,7 @@ def form_field(
                 spacing="3",
                 width="100%",
                 padding="0.75rem 1rem",
+                align="center",  # ← Alignement ajouté
             ),
             border=f"2px solid {Colors.GRAY_200}",
             border_radius=Borders.RADIUS_LG,
@@ -435,14 +486,15 @@ def personal_info_section() -> rx.Component:
         info_row("Nom complet", ProfileState.display_name, "user"),
         info_row("Email", ProfileState.user_email, "mail"),
         rx.hstack(
+            rx.icon("info", size=12, color=Colors.GRAY_400),
             rx.text(
                 "L'adresse email ne peut pas être modifiée",
                 font_size=Typography.SIZE_XS,
                 color=Colors.GRAY_400,
             ),
-            rx.icon("info", size=12, color=Colors.GRAY_400),
             spacing="1",
             margin_top="0.5rem",
+            align="center",  # ← Alignement ajouté
         ),
         spacing="0",
         width="100%",
@@ -452,12 +504,13 @@ def personal_info_section() -> rx.Component:
     edit_content = rx.vstack(
         # Message de succès
         rx.cond(
-            ProfileState.profile_success != "",
+            ProfileState.has_profile_success,
             rx.box(
                 rx.hstack(
                     rx.icon("check-circle", size=16, color=Colors.SUCCESS),
                     rx.text(ProfileState.profile_success, font_size=Typography.SIZE_SM, color=Colors.SUCCESS),
                     spacing="2",
+                    align="center",  # ← Alignement ajouté
                 ),
                 padding="0.75rem",
                 background=Colors.SUCCESS_LIGHT,
@@ -465,17 +518,17 @@ def personal_info_section() -> rx.Component:
                 width="100%",
                 margin_bottom="1rem",
             ),
-            rx.box(),
         ),
         
         # Message d'erreur
         rx.cond(
-            ProfileState.profile_error != "",
+            ProfileState.has_profile_error,
             rx.box(
                 rx.hstack(
                     rx.icon("alert-circle", size=16, color="#dc2626"),
                     rx.text(ProfileState.profile_error, font_size=Typography.SIZE_SM, color="#dc2626"),
                     spacing="2",
+                    align="center",  # ← Alignement ajouté
                 ),
                 padding="0.75rem",
                 background="#fef2f2",
@@ -483,7 +536,6 @@ def personal_info_section() -> rx.Component:
                 width="100%",
                 margin_bottom="1rem",
             ),
-            rx.box(),
         ),
         
         form_field(
@@ -513,24 +565,35 @@ def personal_info_section() -> rx.Component:
                     spacing="3",
                     width="100%",
                     padding="0.75rem 1rem",
+                    align="center",  # ← Alignement ajouté
                 ),
                 border=f"2px solid {Colors.GRAY_200}",
                 border_radius=Borders.RADIUS_LG,
                 background=Colors.GRAY_50,
                 width="100%",
             ),
-            rx.text(
-                "L'adresse email ne peut pas être modifiée",
-                font_size="11px",
-                color=Colors.GRAY_400,
+            rx.hstack(
+                rx.icon("info", size=11, color=Colors.GRAY_400),
+                rx.text(
+                    "L'adresse email ne peut pas être modifiée",
+                    font_size="11px",
+                    color=Colors.GRAY_400,
+                ),
+                spacing="1",
                 margin_top="0.25rem",
+                align="center",  # ← Alignement ajouté
             ),
             spacing="1",
             width="100%",
         ),
         rx.hstack(
             rx.button(
-                rx.hstack(rx.icon("x", size=16), rx.text("Annuler"), spacing="2"),
+                rx.hstack(
+                    rx.icon("x", size=16),
+                    rx.text("Annuler"),
+                    spacing="2",
+                    align="center",  # ← Alignement ajouté
+                ),
                 variant="outline",
                 on_click=ProfileState.cancel_editing,
                 style={
@@ -541,8 +604,18 @@ def personal_info_section() -> rx.Component:
             rx.button(
                 rx.cond(
                     ProfileState.is_saving_profile,
-                    rx.hstack(rx.spinner(size="1"), rx.text("Enregistrement..."), spacing="2"),
-                    rx.hstack(rx.icon("check", size=16), rx.text("Enregistrer"), spacing="2"),
+                    rx.hstack(
+                        rx.spinner(size="1"),
+                        rx.text("Enregistrement..."),
+                        spacing="2",
+                        align="center",  # ← Alignement ajouté
+                    ),
+                    rx.hstack(
+                        rx.icon("check", size=16),
+                        rx.text("Enregistrer"),
+                        spacing="2",
+                        align="center",  # ← Alignement ajouté
+                    ),
                 ),
                 on_click=ProfileState.save_profile,
                 disabled=ProfileState.is_saving_profile,
@@ -555,6 +628,7 @@ def personal_info_section() -> rx.Component:
             margin_top="1rem",
             justify="end",
             width="100%",
+            align="center",  # ← Alignement ajouté
         ),
         spacing="4",
         width="100%",
@@ -565,7 +639,12 @@ def personal_info_section() -> rx.Component:
         ProfileState.is_editing,
         rx.box(),
         rx.button(
-            rx.hstack(rx.icon("pencil", size=16), rx.text("Modifier"), spacing="2"),
+            rx.hstack(
+                rx.icon("pencil", size=16),
+                rx.text("Modifier"),
+                spacing="2",
+                align="center",  # ← Alignement ajouté
+            ),
             variant="outline",
             size="2",
             on_click=ProfileState.start_editing,
@@ -593,12 +672,13 @@ def security_section() -> rx.Component:
         rx.vstack(
             # Message de succès
             rx.cond(
-                ProfileState.password_success != "",
+                ProfileState.has_password_success,
                 rx.box(
                     rx.hstack(
                         rx.icon("check-circle", size=16, color=Colors.SUCCESS),
                         rx.text(ProfileState.password_success, font_size=Typography.SIZE_SM, color=Colors.SUCCESS),
                         spacing="2",
+                        align="center",  # ← Alignement ajouté
                     ),
                     padding="0.75rem",
                     background=Colors.SUCCESS_LIGHT,
@@ -606,17 +686,17 @@ def security_section() -> rx.Component:
                     width="100%",
                     margin_bottom="1rem",
                 ),
-                rx.box(),
             ),
             
             # Message d'erreur
             rx.cond(
-                ProfileState.password_error != "",
+                ProfileState.has_password_error,
                 rx.box(
                     rx.hstack(
                         rx.icon("alert-circle", size=16, color="#dc2626"),
                         rx.text(ProfileState.password_error, font_size=Typography.SIZE_SM, color="#dc2626"),
                         spacing="2",
+                        align="center",  # ← Alignement ajouté
                     ),
                     padding="0.75rem",
                     background="#fef2f2",
@@ -624,15 +704,6 @@ def security_section() -> rx.Component:
                     width="100%",
                     margin_bottom="1rem",
                 ),
-                rx.box(),
-            ),
-            
-            rx.text(
-                "Changer le mot de passe",
-                font_size=Typography.SIZE_BASE,
-                font_weight="600",
-                color=Colors.GRAY_700,
-                margin_bottom="1rem",
             ),
             
             # Mot de passe actuel
@@ -666,13 +737,14 @@ def security_section() -> rx.Component:
                             ),
                             variant="ghost",
                             size="1",
-                            cursor="pointer",
                             on_click=ProfileState.toggle_profile_current_password,
                             color=Colors.GRAY_400,
+                            type="button",
                         ),
                         spacing="3",
                         width="100%",
                         padding="0.75rem 1rem",
+                        align="center",  # ← Alignement ajouté
                     ),
                     border=f"2px solid {Colors.GRAY_200}",
                     border_radius=Borders.RADIUS_LG,
@@ -719,13 +791,14 @@ def security_section() -> rx.Component:
                             ),
                             variant="ghost",
                             size="1",
-                            cursor="pointer",
                             on_click=ProfileState.toggle_profile_new_password,
                             color=Colors.GRAY_400,
+                            type="button",
                         ),
                         spacing="3",
                         width="100%",
                         padding="0.75rem 1rem",
+                        align="center",  # ← Alignement ajouté
                     ),
                     border=f"2px solid {Colors.GRAY_200}",
                     border_radius=Borders.RADIUS_LG,
@@ -747,7 +820,7 @@ def security_section() -> rx.Component:
                 width="100%",
             ),
             
-            # Confirmer nouveau mot de passe
+            # Confirmation mot de passe
             rx.vstack(
                 rx.text(
                     "Confirmer le nouveau mot de passe",
@@ -757,10 +830,10 @@ def security_section() -> rx.Component:
                 ),
                 rx.box(
                     rx.hstack(
-                        rx.icon("key", size=18, color=Colors.GRAY_400),
+                        rx.icon("check-circle", size=18, color=Colors.GRAY_400),
                         rx.input(
                             placeholder="••••••••",
-                            type=rx.cond(ProfileState.profile_show_new_password, "text", "password"),
+                            type="password",
                             value=ProfileState.profile_confirm_password,
                             on_change=ProfileState.set_profile_confirm_password,
                             width="100%",
@@ -779,6 +852,7 @@ def security_section() -> rx.Component:
                         spacing="3",
                         width="100%",
                         padding="0.75rem 1rem",
+                        align="center",  # ← Alignement ajouté
                     ),
                     border=f"2px solid {Colors.GRAY_200}",
                     border_radius=Borders.RADIUS_LG,
@@ -799,8 +873,18 @@ def security_section() -> rx.Component:
                 rx.button(
                     rx.cond(
                         ProfileState.is_changing_password,
-                        rx.hstack(rx.spinner(size="1"), rx.text("Modification..."), spacing="2"),
-                        rx.hstack(rx.icon("refresh-cw", size=16), rx.text("Changer le mot de passe"), spacing="2"),
+                        rx.hstack(
+                            rx.spinner(size="1"),
+                            rx.text("Modification..."),
+                            spacing="2",
+                            align="center",  # ← Alignement ajouté
+                        ),
+                        rx.hstack(
+                            rx.icon("refresh-cw", size=16),
+                            rx.text("Changer le mot de passe"),
+                            spacing="2",
+                            align="center",  # ← Alignement ajouté
+                        ),
                     ),
                     on_click=ProfileState.change_password,
                     disabled=ProfileState.is_changing_password,
@@ -812,6 +896,7 @@ def security_section() -> rx.Component:
                 justify="end",
                 width="100%",
                 margin_top="1rem",
+                align="center",  # ← Alignement ajouté
             ),
             
             spacing="4",
@@ -864,7 +949,12 @@ def danger_zone_section() -> rx.Component:
                 rx.alert_dialog.root(
                     rx.alert_dialog.trigger(
                         rx.button(
-                            rx.hstack(rx.icon("trash-2", size=16), rx.text("Supprimer"), spacing="2"),
+                            rx.hstack(
+                                rx.icon("trash-2", size=16),
+                                rx.text("Supprimer"),
+                                spacing="2",
+                                align="center",  # ← Alignement ajouté
+                            ),
                             variant="outline",
                             color_scheme="red",
                         ),
@@ -927,7 +1017,12 @@ def profile_content() -> rx.Component:
             ),
             rx.spacer(),
             rx.button(
-                rx.hstack(rx.icon("arrow-left", size=18), rx.text("Retour au dashboard"), spacing="2"),
+                rx.hstack(
+                    rx.icon("arrow-left", size=18),
+                    rx.text("Retour au dashboard"),
+                    spacing="2",
+                    align="center",  # ← Alignement ajouté
+                ),
                 variant="outline",
                 on_click=rx.redirect("/dashboard"),
                 style={
@@ -972,12 +1067,12 @@ def profile_content() -> rx.Component:
 @rx.page(
     route="/profile",
     title="Mon Profil - RDE Consulting",
-    on_load=[AuthState.require_auth, UserState.load_simulations],
+    on_load=[ProfileState.require_auth, ProfileState.load_simulations],
 )
 def profile_page() -> rx.Component:
     """Page de profil utilisateur."""
     return rx.cond(
-        AuthState.is_authenticated,
+        ProfileState.is_authenticated,
         rx.hstack(
             sidebar(current_page="profile"),
             rx.box(
