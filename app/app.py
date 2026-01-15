@@ -6,9 +6,10 @@ Application Reflex avec Supabase backend
 # TODO: donner des noms de variables plus digestibles que 1x8h, 2x8h etc
 # TODO: clean this Mode de fonctionnement du site industriel ""3"""
 # TODO: damaged PDF file
-# TODO: 0 simulations dans la page profile
+# TODO: 0 simulations dans la page profile et alignement
 # TODO: action rapide: consulter les fiches
 # TODO: RAG sur questions réponses
+# TODO: mettre nom de fiche en gras et code en bas
 
 
 import reflex as rx

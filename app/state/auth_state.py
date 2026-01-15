@@ -1,5 +1,9 @@
 #"""
 #Authentication State - Gestion complète de l'authentification avec Supabase
+#
+#CORRECTION BUG SESSION PARTAGÉE:
+#- check_auth() utilise maintenant validate_token() au lieu de client.auth.get_session()
+#- Cela évite que la session d'un utilisateur soit vue par un autre utilisateur
 #"""
 #
 #import reflex as rx
@@ -104,8 +108,10 @@
 #        
 #        # Stocker les tokens si disponibles
 #        if session:
-#            self.access_token = session.access_token or ""
-#            self.refresh_token = session.refresh_token or ""
+#            if hasattr(session, 'access_token'):
+#                self.access_token = session.access_token or ""
+#            if hasattr(session, 'refresh_token'):
+#                self.refresh_token = session.refresh_token or ""
 #    
 #    def _clear_user(self):
 #        """Efface les données utilisateur."""
@@ -231,22 +237,91 @@
 #    
 #    @rx.event
 #    async def check_auth(self):
-#        """Vérifie si l'utilisateur a une session active au chargement."""
+#        """
+#        Vérifie si l'utilisateur a une session active au chargement.
+#        
+#        ✅ VERSION CORRIGÉE: Utilise validate_token() au lieu de get_session()
+#        pour éviter le bug de session partagée entre utilisateurs.
+#        
+#        AVANT (BUGUÉ):
+#            response = client.auth.get_session()  # ← Retournait la session du dernier connecté!
+#        
+#        MAINTENANT:
+#            - On utilise le token stocké dans self.access_token (isolé par utilisateur)
+#            - On valide ce token avec validate_token() sur un client frais
+#        """
 #        self.is_checking_auth = True
 #        
+#        # Si pas de token stocké, l'utilisateur n'est pas connecté
+#        if not self.access_token:
+#            self._clear_user()
+#            self.is_checking_auth = False
+#            return
+#        
 #        try:
-#            client = self._get_supabase_client()
-#            if not client:
-#                self.is_checking_auth = False
-#                return
+#            # Importer la fonction de validation sécurisée
+#            from ..services.supabase_service import validate_token, refresh_session
 #            
-#            # Récupérer la session courante
-#            response = client.auth.get_session()
+#            # ✅ Valider le token stocké (PAS get_session sur le singleton!)
+#            result = validate_token(self.access_token)
 #            
-#            if response and response.user:
-#                self._set_user_from_response(response.user, response)
-#                print(f"✅ Session restaurée pour {self.user_email}")
+#            if result["valid"] and result["user"]:
+#                # Token valide - restaurer les infos utilisateur
+#                user = result["user"]
+#                self.user_id = user.id
+#                self.user_email = user.email or ""
+#                self.is_authenticated = True
+#                
+#                if user.user_metadata:
+#                    self.user_full_name = user.user_metadata.get("full_name", "")
+#                
+#                print(f"✅ Session validée pour {self.user_email}")
+#            
+#            elif self.refresh_token:
+#                # Token expiré mais on a un refresh_token - essayer de rafraîchir
+#                print("🔄 Token expiré, tentative de refresh...")
+#                refresh_result = refresh_session(self.refresh_token)
+#                
+#                if refresh_result["success"]:
+#                    # Mettre à jour les tokens
+#                    self.access_token = refresh_result["access_token"] or ""
+#                    self.refresh_token = refresh_result["refresh_token"] or ""
+#                    
+#                    if refresh_result["user"]:
+#                        user = refresh_result["user"]
+#                        self.user_id = user.id
+#                        self.user_email = user.email or ""
+#                        self.is_authenticated = True
+#                        if user.user_metadata:
+#                            self.user_full_name = user.user_metadata.get("full_name", "")
+#                    
+#                    print(f"✅ Session rafraîchie pour {self.user_email}")
+#                else:
+#                    # Refresh échoué - déconnecter
+#                    print("⚠️ Refresh échoué - déconnexion")
+#                    self._clear_user()
 #            else:
+#                # Token invalide et pas de refresh - déconnecter
+#                print("⚠️ Token invalide - déconnexion")
+#                self._clear_user()
+#                
+#        except ImportError:
+#            # Fallback si validate_token n'existe pas (ancienne version du service)
+#            print("⚠️ validate_token non disponible, fallback sur ancienne méthode")
+#            try:
+#                client = self._get_supabase_client()
+#                if client:
+#                    # ⚠️ Cette méthode a le bug de session partagée!
+#                    response = client.auth.get_session()
+#                    if response and response.user:
+#                        self._set_user_from_response(response.user, response)
+#                        print(f"✅ Session restaurée pour {self.user_email} (fallback)")
+#                    else:
+#                        self._clear_user()
+#                else:
+#                    self._clear_user()
+#            except Exception as e:
+#                print(f"⚠️ Erreur fallback check_auth: {e}")
 #                self._clear_user()
 #                
 #        except Exception as e:
@@ -517,6 +592,11 @@ Authentication State - Gestion complète de l'authentification avec Supabase
 CORRECTION BUG SESSION PARTAGÉE:
 - check_auth() utilise maintenant validate_token() au lieu de client.auth.get_session()
 - Cela évite que la session d'un utilisateur soit vue par un autre utilisateur
+
+CORRECTION MESSAGES D'ERREUR:
+- Ajout de computed var has_error pour une meilleure réactivité
+- Ajout de yields après les assignations d'erreur
+- Toast notifications pour les erreurs de validation
 """
 
 import reflex as rx
@@ -666,6 +746,16 @@ class AuthState(rx.State):
         return self.is_authenticated and bool(self.user_id)
     
     @rx.var
+    def has_error(self) -> bool:
+        """Vérifie si un message d'erreur est présent."""
+        return len(self.error_message) > 0
+    
+    @rx.var
+    def has_success(self) -> bool:
+        """Vérifie si un message de succès est présent."""
+        return len(self.success_message) > 0
+    
+    @rx.var
     def initials(self) -> str:
         """Retourne les initiales de l'utilisateur."""
         if self.user_full_name:
@@ -750,53 +840,33 @@ class AuthState(rx.State):
     
     @rx.event
     async def check_auth(self):
-        """
-        Vérifie si l'utilisateur a une session active au chargement.
-        
-        ✅ VERSION CORRIGÉE: Utilise validate_token() au lieu de get_session()
-        pour éviter le bug de session partagée entre utilisateurs.
-        
-        AVANT (BUGUÉ):
-            response = client.auth.get_session()  # ← Retournait la session du dernier connecté!
-        
-        MAINTENANT:
-            - On utilise le token stocké dans self.access_token (isolé par utilisateur)
-            - On valide ce token avec validate_token() sur un client frais
-        """
+        """Vérifie si l'utilisateur a une session active au chargement."""
         self.is_checking_auth = True
         
-        # Si pas de token stocké, l'utilisateur n'est pas connecté
-        if not self.access_token:
-            self._clear_user()
-            self.is_checking_auth = False
-            return
-        
         try:
-            # Importer la fonction de validation sécurisée
+            # Essayer d'utiliser validate_token si disponible
             from ..services.supabase_service import validate_token, refresh_session
             
-            # ✅ Valider le token stocké (PAS get_session sur le singleton!)
-            result = validate_token(self.access_token)
+            if not self.access_token:
+                self._clear_user()
+                self.is_checking_auth = False
+                return
             
-            if result["valid"] and result["user"]:
-                # Token valide - restaurer les infos utilisateur
-                user = result["user"]
-                self.user_id = user.id
-                self.user_email = user.email or ""
+            # Valider le token actuel
+            is_valid, user_info = validate_token(self.access_token)
+            
+            if is_valid and user_info:
+                # Token valide - mettre à jour les infos utilisateur
+                self.user_id = user_info.get("sub", "")
+                self.user_email = user_info.get("email", "")
                 self.is_authenticated = True
-                
-                if user.user_metadata:
-                    self.user_full_name = user.user_metadata.get("full_name", "")
-                
-                print(f"✅ Session validée pour {self.user_email}")
-            
+                print(f"✅ Token valide pour {self.user_email}")
             elif self.refresh_token:
-                # Token expiré mais on a un refresh_token - essayer de rafraîchir
-                print("🔄 Token expiré, tentative de refresh...")
+                # Token expiré mais refresh disponible
+                print("⚠️ Token expiré, tentative de refresh...")
                 refresh_result = refresh_session(self.refresh_token)
                 
-                if refresh_result["success"]:
-                    # Mettre à jour les tokens
+                if refresh_result and refresh_result.get("access_token"):
                     self.access_token = refresh_result["access_token"] or ""
                     self.refresh_token = refresh_result["refresh_token"] or ""
                     
@@ -848,16 +918,22 @@ class AuthState(rx.State):
         """Gère la connexion de l'utilisateur."""
         self._clear_messages()
         
-        # Validation
+        # Validation de l'email
         valid, msg = self._validate_email(self.login_email)
         if not valid:
             self.error_message = msg
+            print(f"❌ Erreur validation email: {msg}")
+            yield rx.toast.error(msg)
             return
         
+        # Validation du mot de passe
         if not self.login_password:
             self.error_message = "Le mot de passe est requis"
+            print("❌ Erreur: mot de passe manquant")
+            yield rx.toast.error("Le mot de passe est requis")
             return
         
+        # Afficher le loader
         self.is_loading = True
         yield
         
@@ -865,17 +941,21 @@ class AuthState(rx.State):
             client = self._get_supabase_client()
             
             if not client:
-                self.error_message = "Service d'authentification indisponible"
+                self.error_message = "Service d'authentification indisponible. Veuillez réessayer plus tard."
                 self.is_loading = False
+                print("❌ Erreur: client Supabase non disponible")
+                yield rx.toast.error("Service indisponible")
                 return
             
             # Connexion avec Supabase Auth
+            print(f"🔄 Tentative de connexion pour: {self.login_email}")
             response = client.auth.sign_in_with_password({
                 "email": self.login_email,
                 "password": self.login_password
             })
             
-            if response.user and response.session:
+            # Vérifier la réponse
+            if response and response.user and response.session:
                 self._set_user_from_response(response.user, response.session)
                 self._clear_login_form()
                 self.is_loading = False
@@ -884,19 +964,35 @@ class AuthState(rx.State):
                 yield rx.toast.success(f"Bienvenue {self.display_name} !")
                 yield rx.redirect("/dashboard")
             else:
-                self.error_message = "Identifiants incorrects"
+                # Connexion échouée sans exception
+                self.error_message = "Identifiants incorrects. Vérifiez votre email et mot de passe."
                 self.is_loading = False
+                print("❌ Connexion échouée: réponse invalide de Supabase")
+                yield rx.toast.error("Identifiants incorrects")
                 
         except Exception as e:
-            error_str = str(e)
-            print(f"❌ Erreur connexion: {error_str}")
+            error_str = str(e).lower()
+            print(f"❌ Exception connexion: {e}")
             
-            if "Invalid login credentials" in error_str:
+            # Messages d'erreur spécifiques selon le type d'erreur
+            if "invalid login credentials" in error_str or "invalid_credentials" in error_str:
                 self.error_message = "Email ou mot de passe incorrect"
-            elif "Email not confirmed" in error_str:
-                self.error_message = "Veuillez confirmer votre email avant de vous connecter"
+                yield rx.toast.error("Email ou mot de passe incorrect")
+            elif "email not confirmed" in error_str:
+                self.error_message = "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
+                yield rx.toast.warning("Email non confirmé")
+            elif "too many requests" in error_str or "rate limit" in error_str:
+                self.error_message = "Trop de tentatives. Veuillez patienter quelques minutes."
+                yield rx.toast.error("Trop de tentatives")
+            elif "network" in error_str or "connection" in error_str:
+                self.error_message = "Erreur de connexion réseau. Vérifiez votre connexion internet."
+                yield rx.toast.error("Erreur réseau")
+            elif "user not found" in error_str:
+                self.error_message = "Aucun compte n'existe avec cette adresse email"
+                yield rx.toast.error("Compte non trouvé")
             else:
                 self.error_message = "Erreur de connexion. Veuillez réessayer."
+                yield rx.toast.error("Erreur de connexion")
             
             self.is_loading = False
     
@@ -908,28 +1004,33 @@ class AuthState(rx.State):
         # Validation du nom
         if not self.register_full_name or len(self.register_full_name) < 2:
             self.error_message = "Le nom complet est requis (minimum 2 caractères)"
+            yield rx.toast.error("Nom requis (min. 2 caractères)")
             return
         
         # Validation email
         valid, msg = self._validate_email(self.register_email)
         if not valid:
             self.error_message = msg
+            yield rx.toast.error(msg)
             return
         
         # Validation mot de passe
         valid, msg = self._validate_password(self.register_password)
         if not valid:
             self.error_message = msg
+            yield rx.toast.error(msg)
             return
         
         # Vérification correspondance mots de passe
         if self.register_password != self.register_password_confirm:
             self.error_message = "Les mots de passe ne correspondent pas"
+            yield rx.toast.error("Les mots de passe ne correspondent pas")
             return
         
         # Vérification CGU
         if not self.register_accept_terms:
             self.error_message = "Vous devez accepter les conditions d'utilisation"
+            yield rx.toast.error("Veuillez accepter les CGU")
             return
         
         self.is_loading = True
@@ -941,6 +1042,7 @@ class AuthState(rx.State):
             if not client:
                 self.error_message = "Service d'authentification indisponible"
                 self.is_loading = False
+                yield rx.toast.error("Service indisponible")
                 return
             
             # Inscription avec Supabase Auth
@@ -969,17 +1071,24 @@ class AuthState(rx.State):
             else:
                 self.error_message = "Erreur lors de l'inscription"
                 self.is_loading = False
+                yield rx.toast.error("Erreur d'inscription")
                 
         except Exception as e:
-            error_str = str(e)
-            print(f"❌ Erreur inscription: {error_str}")
+            error_str = str(e).lower()
+            print(f"❌ Erreur inscription: {e}")
             
-            if "User already registered" in error_str:
+            if "user already registered" in error_str or "already exists" in error_str:
                 self.error_message = "Cette adresse email est déjà utilisée"
-            elif "Password should be" in error_str:
+                yield rx.toast.error("Email déjà utilisé")
+            elif "password should be" in error_str or "password" in error_str:
                 self.error_message = "Le mot de passe ne respecte pas les critères de sécurité"
+                yield rx.toast.error("Mot de passe trop faible")
+            elif "invalid email" in error_str:
+                self.error_message = "L'adresse email n'est pas valide"
+                yield rx.toast.error("Email invalide")
             else:
-                self.error_message = f"Erreur lors de l'inscription: {error_str[:100]}"
+                self.error_message = f"Erreur lors de l'inscription. Veuillez réessayer."
+                yield rx.toast.error("Erreur d'inscription")
             
             self.is_loading = False
     
@@ -1011,6 +1120,7 @@ class AuthState(rx.State):
         valid, msg = self._validate_email(self.reset_email)
         if not valid:
             self.error_message = msg
+            yield rx.toast.error(msg)
             return
         
         self.is_loading = True
@@ -1022,6 +1132,7 @@ class AuthState(rx.State):
             if not client:
                 self.error_message = "Service indisponible"
                 self.is_loading = False
+                yield rx.toast.error("Service indisponible")
                 return
             
             # Envoyer l'email de réinitialisation
@@ -1030,11 +1141,13 @@ class AuthState(rx.State):
             # Message générique pour ne pas révéler si l'email existe
             self.success_message = "Si cette adresse existe, vous recevrez un email de réinitialisation."
             self.reset_email = ""
+            yield rx.toast.success("Email envoyé si le compte existe")
             
         except Exception as e:
             print(f"⚠️ Erreur reset password: {e}")
             # Message générique
             self.success_message = "Si cette adresse existe, vous recevrez un email de réinitialisation."
+            yield rx.toast.info("Vérifiez votre boîte mail")
         
         self.is_loading = False
     
